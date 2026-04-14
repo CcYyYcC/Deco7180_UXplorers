@@ -1,6 +1,6 @@
-## Interview Questions
+# Interview Questions
 
-### Closed-ended Questions
+## Closed-ended Questions
 
 **Q1 – Functional Preference**
 Which feature do you think would be more helpful for saving your planning time: the advanced multi-filter system or the automated DIY itinerary builder?
@@ -22,7 +22,7 @@ Does the combination of DIY route building and referencing shared itineraries ma
 
 Follow-up: What is the biggest thing traditional methods (like Google Maps or blogs) are missing that this platform successfully provides?
 
-### Open-ended Questions
+## Open-ended Questions
 
 **Q5 – Trust & Social Factor**
 What would motivate you to share your own DIY route with other users, and what kind of details in a shared itinerary would make you trust another user’s recommendation?
