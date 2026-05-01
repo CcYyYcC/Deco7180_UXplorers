@@ -1,0 +1,41 @@
+/* Custom slider thumb styling */
+.slider-thumb::-webkit-slider-thumb {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  border: 3px solid white;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.slider-thumb::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+}
+
+.slider-thumb::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+
+.slider-thumb::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  border: 3px solid white;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.slider-thumb::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+}
+
+.slider-thumb::-moz-range-thumb:active {
+  transform: scale(1.05);
+}
