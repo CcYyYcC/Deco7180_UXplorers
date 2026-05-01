@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SafeBite | Recommended Routes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="../assets/shared-data.js"></script>
+    <script defer src="../assets/shared-utils.js"></script>
+    <script defer src="./script.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="page-header">
+        <nav class="top-nav" aria-label="Primary">
+          <a class="nav-tab" href="../restaurant-discovery/index.html">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"/></svg>
+            </span>
+            Restaurant Discovery
+          </a>
+          <a class="nav-tab is-active" href="../recommended-routes/index.html" aria-current="page">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m13 3 1.8 4.2L19 9l-4.2 1.8L13 15l-1.8-4.2L7 9l4.2-1.8L13 3Zm-8 8 1.2 2.8L9 15l-2.8 1.2L5 19l-1.2-2.8L1 15l2.8-1.2L5 11Zm13 4 1 2.2L21 18l-2 0.8L18 21l-1-2.2L15 18l2-0.8 1-2.2Z"/></svg>
+            </span>
+            Recommended Routes
+          </a>
+          <a class="nav-tab" href="../diy-route-studio/index.html">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 5a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 5Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2ZM7 15a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 15Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2Z"/></svg>
+            </span>
+            DIY Route Studio
+          </a>
+        </nav>
+
+        <div class="heading-row">
+          <h1>Food Journey</h1>
+          <p class="page-summary">
+            Review several recommended Brisbane dining routes, compare stop mixes, and open any route for manual editing.
+          </p>
+        </div>
+
+        <label class="search-field">
+          <span class="search-field__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"/></svg>
+          </span>
+          <input id="destinationSearch" type="search" placeholder="Search destinations..." />
+        </label>
+      </header>
+
+      <main class="routes-layout">
+        <aside class="routes-panel">
+          <section class="panel-section">
+            <p class="section-label">Travel Mode</p>
+            <div class="mode-toggle" role="group" aria-label="Travel mode">
+              <button id="soloModeButton" class="mode-button is-active" type="button">Solo Mode</button>
+              <button id="groupModeButton" class="mode-button" type="button">Group Mode</button>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <p class="section-label">Saved Spots</p>
+            <ul id="savedSpotsList" class="saved-spots-list"></ul>
+          </section>
+
+          <section class="panel-section panel-section--routes">
+            <p class="section-label">Recommended Routes</p>
+            <div id="routeCards" class="route-cards" aria-live="polite"></div>
+          </section>
+        </aside>
+
+        <section class="map-panel" aria-label="Recommended route map">
+          <div id="routeMapCallout" class="map-callout"></div>
+          <div id="routesMap" class="map-canvas"></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SafeBite | Restaurant Discovery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="../assets/shared-data.js"></script>
+    <script defer src="../assets/shared-utils.js"></script>
+    <script defer src="./script.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="page-header">
+        <nav class="top-nav" aria-label="Primary">
+          <a class="nav-tab is-active" href="../restaurant-discovery/index.html" aria-current="page">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"/></svg>
+            </span>
+            Restaurant Discovery
+          </a>
+          <a class="nav-tab" href="../recommended-routes/index.html">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m13 3 1.8 4.2L19 9l-4.2 1.8L13 15l-1.8-4.2L7 9l4.2-1.8L13 3Zm-8 8 1.2 2.8L9 15l-2.8 1.2L5 19l-1.2-2.8L1 15l2.8-1.2L5 11Zm13 4 1 2.2L21 18l-2 0.8L18 21l-1-2.2L15 18l2-0.8 1-2.2Z"/></svg>
+            </span>
+            Recommended Routes
+          </a>
+          <a class="nav-tab" href="../diy-route-studio/index.html">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 5a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 5Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2ZM7 15a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 15Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2Z"/></svg>
+            </span>
+            DIY Route Studio
+          </a>
+        </nav>
+
+        <div class="heading-row">
+          <p class="page-kicker">Brisbane Safe Dining Map</p>
+          <h1>Restaurant Discovery</h1>
+          <p class="page-summary">
+            Browse restaurants on a live Brisbane map, compare food safety at a glance, and choose with more confidence.
+          </p>
+        </div>
+
+        <div class="toolbar">
+          <label class="search-field">
+            <span class="search-field__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"/></svg>
+            </span>
+            <input id="searchInput" type="search" placeholder="Search restaurants..." />
+          </label>
+          <button
+            id="openFilterButton"
+            class="filter-toggle"
+            type="button"
+            aria-label="Open filters"
+            aria-controls="filterDrawer"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h8V5H4v2Zm0 6h16v-2H4v2Zm0 6h10v-2H4v2Zm12-12h4V5h-4v2Zm-6 6h4v-2h-4v2Zm6 6h4v-2h-4v2Z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="discovery-layout">
+        <aside class="restaurant-panel" aria-label="Restaurant results panel">
+          <p id="resultsCount" class="results-count">10 restaurants found</p>
+          <section id="restaurantList" class="restaurant-list" aria-live="polite"></section>
+        </aside>
+
+        <section class="map-panel" aria-label="Map panel">
+          <div class="map-panel__hint">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 6 12.2 6.3 12.6a1 1 0 0 0 1.4 0C13 21.2 19 14.2 19 9a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z"/></svg>
+            Click markers to view details
+          </div>
+          <div class="map-callout">
+            <strong>Large-screen view</strong>
+            <span>Left side compares restaurants, right side keeps the Brisbane map visible while you scroll.</span>
+          </div>
+          <div id="discoveryMap" class="map-canvas" aria-label="Restaurant map"></div>
+          <article id="mapPreview" class="map-preview" hidden></article>
+        </section>
+      </main>
+    </div>
+
+    <div id="drawerOverlay" class="drawer-overlay" hidden></div>
+    <aside
+      id="filterDrawer"
+      class="filter-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="filterDrawerTitle"
+      hidden
+    >
+      <div class="drawer-header">
+        <h2 id="filterDrawerTitle">Filters</h2>
+        <button id="closeFilterButton" class="icon-button" type="button" aria-label="Close filters">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg>
+        </button>
+      </div>
+
+      <div class="drawer-content">
+        <section class="filter-section">
+          <div class="filter-section__heading">
+            <div>
+              <p class="filter-section__eyebrow">Priority Filter</p>
+              <h3>Food Safety Rating</h3>
+            </div>
+          </div>
+          <p class="filter-copy">Filter restaurants by their food safety inspection score.</p>
+          <div class="segmented-grid" id="safetyRatingFilters">
+            <button class="chip-button is-selected" type="button" data-filter-group="safety" data-value="all">All</button>
+            <button class="chip-button" type="button" data-filter-group="safety" data-value="3">3+</button>
+            <button class="chip-button" type="button" data-filter-group="safety" data-value="4">4+</button>
+            <button class="chip-button" type="button" data-filter-group="safety" data-value="5">5</button>
+          </div>
+        </section>
+
+        <section class="filter-section filter-section--highlight">
+          <div class="filter-section__heading">
+            <div>
+              <p class="filter-section__eyebrow">Recommendation Weighting</p>
+              <h3>Safety Importance</h3>
+            </div>
+            <span id="priorityBadge" class="priority-badge">Medium</span>
+          </div>
+          <label class="range-field" for="safetyPriority">
+            <input id="safetyPriority" type="range" min="0" max="100" value="50" />
+          </label>
+          <div class="range-labels">
+            <span>Low Priority</span>
+            <span>High Priority</span>
+          </div>
+          <p id="priorityDescription" class="filter-note">
+            Food safety is balanced with rating, distance, and price in recommendations.
+          </p>
+        </section>
+
+        <section class="filter-section">
+          <h3>Availability</h3>
+          <div class="option-stack">
+            <button class="option-button" type="button" data-filter-group="availability" data-value="openNow">
+              <span>Open Now</span>
+              <small>Currently accepting customers</small>
+            </button>
+            <button class="option-button" type="button" data-filter-group="availability" data-value="openForLunch">
+              <span>Open for Lunch</span>
+              <small>Serves lunch (11am - 3pm)</small>
+            </button>
+          </div>
+        </section>
+
+        <section class="filter-section">
+          <h3>Price Range</h3>
+          <div class="segmented-grid segmented-grid--price">
+            <button class="chip-button is-selected" type="button" data-filter-group="price" data-value="all">All</button>
+            <button class="chip-button" type="button" data-filter-group="price" data-value="$">$</button>
+            <button class="chip-button" type="button" data-filter-group="price" data-value="$$">$$</button>
+            <button class="chip-button" type="button" data-filter-group="price" data-value="$$$">$$$</button>
+            <button class="chip-button" type="button" data-filter-group="price" data-value="$$$$">$$$$</button>
+          </div>
+        </section>
+
+        <section class="filter-section">
+          <h3>Distance</h3>
+          <div class="segmented-grid segmented-grid--distance">
+            <button class="chip-button is-selected" type="button" data-filter-group="distance" data-value="any">Any distance</button>
+            <button class="chip-button" type="button" data-filter-group="distance" data-value="0.5">0.5 mi</button>
+            <button class="chip-button" type="button" data-filter-group="distance" data-value="1">1 mi</button>
+            <button class="chip-button" type="button" data-filter-group="distance" data-value="2">2 mi</button>
+            <button class="chip-button" type="button" data-filter-group="distance" data-value="5">5 mi</button>
+            <button class="chip-button" type="button" data-filter-group="distance" data-value="10">10 mi</button>
+          </div>
+        </section>
+
+        <section class="filter-section">
+          <h3>Category</h3>
+          <div class="chip-wrap">
+            <button class="chip-button is-selected" type="button" data-filter-group="category" data-value="all">All Categories</button>
+            <button class="chip-button" type="button" data-filter-group="category" data-value="BBQ">BBQ</button>
+            <button class="chip-button" type="button" data-filter-group="category" data-value="Seafood">Seafood</button>
+            <button class="chip-button" type="button" data-filter-group="category" data-value="Italian">Italian</button>
+            <button class="chip-button" type="button" data-filter-group="category" data-value="Mexican">Mexican</button>
+            <button class="chip-button" type="button" data-filter-group="category" data-value="Asian">Asian</button>
+            <button class="chip-button" type="button" data-filter-group="category" data-value="Cafe">Cafe</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="drawer-actions">
+        <button id="clearFiltersButton" class="button button--ghost" type="button">Clear All</button>
+        <button id="applyFiltersButton" class="button button--primary" type="button">Apply Filters</button>
+      </div>
+    </aside>
+  </body>
+</html>

@@ -81,4 +81,4 @@ Future iterations should focus on:
 - Strengthening goal-oriented filtering  
 - Enhancing route-based decision support  
 - Providing practical information  
-- Building transparent and trustworthy data systems  
+- Building transparent and trustworthy data systems 
