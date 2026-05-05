@@ -1,4 +1,4 @@
-const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
+const GOOGLE_MAPS_API_KEY = "AIzaSyBhPIN-vwwFqtnVPj_3iLo84dUnQvOjHT8";
 
 document.addEventListener("DOMContentLoaded", () => {
     const { diyWishlist } = window.SafeBiteData;
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dropZone: document.querySelector("#dropZone"),
         totalDistance: document.querySelector("#totalDistance"),
         walkingTime: document.querySelector("#walkingTime"),
-        waitingTime: document.querySelector("#waitingTime"), // 新增 DOM 绑定
+        waitingTime: document.querySelector("#waitingTime"),
         priceLevel: document.querySelector("#priceLevel"),
         clearRouteButton: document.querySelector("#clearRouteButton"),
         confirmRouteButton: document.querySelector("#confirmRouteButton"),
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         state.map = new window.google.maps.Map(refs.mapElement, {
-            center: { lat: -27.476, lng: 153.024 },
+            center: { lat: -27.476, lng: 153.024 }, // 默认中心点：Brisbane
             zoom: 14.2,
             mapTypeControl: false,
             streetViewControl: false,
@@ -217,7 +217,6 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="width: 100%;">
               <h3>${escapeHtml(restaurant.name)}</h3>
               
-              <!-- 强化：交互式安全徽章 -->
               <div class="wishlist-meta">
                 <button type="button" class="grade-pill grade-pill--interactive" title="Verify Official Safety Report">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
@@ -226,7 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span>${restaurant.priceLevel}</span>
               </div>
               
-              <!-- 强化：查看菜单按钮 -->
               <div class="wishlist-meta wishlist-actions">
                 <span>${escapeHtml(restaurant.cuisine)}</span>
                 <button type="button" class="button-menu-preview" aria-label="View Menu Images">
@@ -353,11 +351,9 @@ document.addEventListener("DOMContentLoaded", () => {
         render();
     }
 
-    // 生成 Delta 差值徽章的辅助函数
     function generateDeltaHtml(diff, unit) {
         if (Math.abs(diff) < 0.1) return "";
         const isIncrease = diff > 0;
-        // 时间或距离增加属于负面体验(红色)，减少属于正面体验(绿色)
         const colorClass = isIncrease ? "is-positive" : "is-negative";
         const sign = isIncrease ? "+" : "";
         const val = unit === "km" ? diff.toFixed(1) : Math.round(diff);
@@ -368,7 +364,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const summary = calculateItinerarySummary(state.itineraryIds);
         const stops = state.itineraryIds.map((id) => getRestaurantById(id)).filter(Boolean);
 
-        // 计算总等待时间
         let totalWaitMins = 0;
         stops.forEach((stop) => {
             const min = parseInt(stop.waitTime);
@@ -383,13 +378,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const prev = state.previousSummary || currentData;
 
-        // 渲染带有 Delta 动画的 DOM
         refs.totalDistance.innerHTML = `${formatKm(currentData.dist)} ${generateDeltaHtml(currentData.dist - prev.dist, "km")}`;
         refs.walkingTime.innerHTML = `${formatDurationClock(currentData.walk)} ${generateDeltaHtml(currentData.walk - prev.walk, "m")}`;
         refs.waitingTime.innerHTML = `${formatDurationClock(currentData.wait)} ${generateDeltaHtml(currentData.wait - prev.wait, "m")}`;
         refs.priceLevel.textContent = summary.priceLevel;
 
-        // 更新状态记录
         state.previousSummary = currentData;
         refs.confirmRouteButton.disabled = state.itineraryIds.length === 0;
 
