@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SafeBite | Homepage</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="../assets/shared-data.js"></script>
+    <script defer src="../assets/shared-utils.js"></script>
+    <script defer src="./script.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="site-header__top">
+          <a class="brand-mark" href="../homepage/index.html" aria-label="SafeBite homepage">
+            <span class="brand-mark__badge">SB</span>
+            <span class="brand-mark__text">
+              <strong>SafeBite</strong>
+              <small>Brisbane Dining Guide</small>
+            </span>
+          </a>
+
+          <nav class="top-nav top-nav--desktop" aria-label="Primary">
+            <a class="nav-tab is-active" href="../homepage/index.html" aria-current="page">Home</a>
+            <a class="nav-tab" href="../restaurant-discovery/index.html">Restaurants</a>
+            <a class="nav-tab" href="../recommended-routes/index.html">Routes</a>
+            <a class="nav-tab" href="../diy-route-studio/index.html">DIY Studio</a>
+          </nav>
+
+          <div class="header-actions">
+            <button class="icon-pill" type="button" aria-label="User account">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4 0-7 2-7 4.5V20h14v-1.5C19 16 16 14 12 14Z"/></svg>
+            </button>
+            <button id="menuToggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="siteDrawer" aria-label="Open site menu">
+              <span></span><span></span><span></span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <aside id="siteDrawer" class="site-drawer" hidden>
+        <div class="site-drawer__content">
+          <h2>Explore SafeBite</h2>
+          <a href="../homepage/index.html">Homepage</a>
+          <a href="../restaurant-discovery/index.html">Restaurant Discovery</a>
+          <a href="../recommended-routes/index.html">Recommended Routes</a>
+          <a href="../diy-route-studio/index.html">DIY Route Studio</a>
+        </div>
+      </aside>
+      <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+
+      <main class="homepage-main">
+        <section class="hero-stage">
+          <div class="hero-stage__copy">
+            <p class="eyebrow">Selected for confident travelers</p>
+            <h1>Discover Brisbane restaurants and food journeys with a safer point of view.</h1>
+            <p class="hero-text">
+              A clean starting point for visitors who want elegant dining suggestions, clear food safety signals, and routes that fit the city around them.
+            </p>
+
+            <form id="homeSearchForm" class="hero-search" role="search">
+              <label class="hero-search__field">
+                <span class="hero-search__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"/></svg>
+                </span>
+                <input id="homeSearchInput" type="search" placeholder="Search restaurants, routes, or South Bank..." aria-label="Search homepage content" />
+              </label>
+              <button class="button button--primary" type="submit">Search</button>
+            </form>
+
+            <div class="hero-microcopy">
+              <span>Featured now</span>
+              <strong>The Golden Fork</strong>
+              <small>Italian · 4.8 rating · Safety 5.0/5.0</small>
+            </div>
+          </div>
+
+          <div class="hero-stage__visual">
+            <img src="../assets/images/restaurant-1.jpg" alt="Curated SafeBite restaurant feature" />
+            <div class="hero-stage__caption">
+              <span class="mini-pill">Brisbane spotlight</span>
+              <h2>Fine dining picks, local routes, and traveler-first planning.</h2>
+            </div>
+          </div>
+        </section>
+
+        <section class="gateway-band">
+          <article class="gateway-band__intro">
+            <p class="eyebrow">Welcome to BNE</p>
+            <h2>Choose how you want to explore the city’s food scene.</h2>
+            <p>Three tools, one clear entry point.</p>
+          </article>
+
+          <div class="gateway-grid">
+            <a class="gateway-card" href="../restaurant-discovery/index.html">
+              <span class="gateway-card__index">01</span>
+              <h3>Restaurant Discovery</h3>
+              <p>Browse standout venues on the Brisbane map, compare ratings, and prioritize food safety with confidence.</p>
+            </a>
+            <a class="gateway-card" href="../recommended-routes/index.html">
+              <span class="gateway-card__index">02</span>
+              <h3>Recommended Routes</h3>
+              <p>Open several ready-made food journeys for solo travelers or groups before choosing the best sequence.</p>
+            </a>
+            <a class="gateway-card" href="../diy-route-studio/index.html">
+              <span class="gateway-card__index">03</span>
+              <h3>DIY Route Studio</h3>
+              <p>Drag, reorder, and confirm your own route while keeping the overall journey readable on one screen.</p>
+            </a>
+          </div>
+        </section>
+
+        <section class="editorial-section">
+          <div class="section-heading">
+            <p class="eyebrow">SafeBite Selections</p>
+            <h2>Featured restaurants worth opening first.</h2>
+          </div>
+          <div id="featuredRestaurants" class="content-grid"></div>
+        </section>
+
+        <section class="curated-section">
+          <div class="curated-section__content">
+            <div class="curated-section__copy">
+              <p class="eyebrow">Curated Food Journeys</p>
+              <h2>Recommended routes you can open and customize.</h2>
+              <p>Start with a route, then move into the DIY planner when you want to adjust the order.</p>
+              <a class="button button--secondary" href="../recommended-routes/index.html">Open all routes</a>
+            </div>
+            <div class="curated-section__visual">
+              <img src="../assets/images/restaurant-4.jpg" alt="Chef preparing a curated meal" />
+              <div class="visual-note">
+                <strong>Simple, polished, useful</strong>
+                <span>Editorial in tone, direct in navigation.</span>
+              </div>
+            </div>
+          </div>
+          <div id="featuredRoutes" class="content-grid content-grid--routes"></div>
+        </section>
+
+        <section class="cta-section">
+          <div class="cta-card">
+            <div>
+              <p class="eyebrow">Begin the journey</p>
+              <h2>Open Restaurant Discovery and start from Brisbane’s most reassuring picks.</h2>
+            </div>
+            <a class="button button--primary" href="../restaurant-discovery/index.html">Enter SafeBite</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
