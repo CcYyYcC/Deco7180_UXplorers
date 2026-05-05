@@ -1,4 +1,4 @@
-const GOOGLE_MAPS_API_KEY = "AIzaSyBhPIN-vwwFqtnVPj_3iLo84dUnQvOjHT8";
+const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"; // <-- Replace with your actual API key
 
 document.addEventListener("DOMContentLoaded", () => {
     const { diyWishlist } = window.SafeBiteData;
@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
         formatKm,
         getRestaurantById,
         loadGoogleMapsApi,
-        midpointBetween,
         toLatLng,
     } = window.SafeBiteUtils;
 
@@ -33,7 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
         mapReady: false,
         routeMarkers: [],
         segmentMarkers: [],
-        routePolyline: null,
+        directionsService: null,
+        directionsRenderer: null,
         previousSummary: null, // 用于记录上一次的状态以计算 Delta
     };
 
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         state.map = new window.google.maps.Map(refs.mapElement, {
-            center: { lat: -27.476, lng: 153.024 }, // 默认中心点：Brisbane
+            center: { lat: -27.476, lng: 153.024 }, // Brisbane CBD
             zoom: 14.2,
             mapTypeControl: false,
             streetViewControl: false,
@@ -138,11 +138,17 @@ document.addEventListener("DOMContentLoaded", () => {
             gestureHandling: "cooperative",
         });
 
-        state.routePolyline = new window.google.maps.Polyline({
+        // 初始化导航服务与渲染器，替代原本的 Polyline
+        state.directionsService = new window.google.maps.DirectionsService();
+        state.directionsRenderer = new window.google.maps.DirectionsRenderer({
             map: state.map,
-            strokeColor: "#ef4444",
-            strokeOpacity: 0.94,
-            strokeWeight: 5,
+            suppressMarkers: true, // 隐藏默认图钉，保留我们的红色圆点
+            preserveViewport: true, // 避免自动缩放冲突
+            polylineOptions: {
+                strokeColor: "#ef4444", // 保持原来的红色线条风格
+                strokeOpacity: 0.94,
+                strokeWeight: 5,
+            },
         });
 
         state.mapReady = true;
@@ -404,7 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function drawItineraryOnMap() {
-        if (!state.mapReady || !state.map || !state.routePolyline) {
+        if (!state.mapReady || !state.map) {
             return;
         }
 
@@ -414,7 +420,6 @@ document.addEventListener("DOMContentLoaded", () => {
             .map((restaurantId) => getRestaurantById(restaurantId))
             .filter(Boolean);
         const positions = stops.map((stop) => toLatLng(stop.coordinates));
-        state.routePolyline.setPath(positions);
 
         if (stops.length === 0) {
             state.map.setCenter({ lat: -27.476, lng: 153.024 });
@@ -422,8 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const summary = calculateItinerarySummary(state.itineraryIds);
-
+        // 1. 绘制我们自定义的带字母（A, B, C）的红色打卡图钉
         positions.forEach((position, index) => {
             const marker = new window.google.maps.Marker({
                 position,
@@ -439,27 +443,64 @@ document.addEventListener("DOMContentLoaded", () => {
             state.routeMarkers.push(marker);
         });
 
-        summary.segmentTimes.forEach((label, index) => {
-            const badge = new window.google.maps.Marker({
-                position: midpointBetween(positions[index], positions[index + 1]),
-                map: state.map,
-                clickable: false,
-                zIndex: 120,
-                icon: createGoogleBadgeIcon(label),
-            });
-            state.segmentMarkers.push(badge);
+        const summary = calculateItinerarySummary(state.itineraryIds);
+
+        // 如果只有一个地点，仅聚焦，不计算路线
+        if (positions.length === 1) {
+            fitGoogleMapToPositions(state.map, positions, 96);
+            return;
+        }
+
+        // 2. 如果有多个地点，调用 Google Directions API 规划【真实步行】路线
+        const waypoints = positions
+            .slice(1, -1)
+            .map((pos) => ({ location: pos, stopover: true }));
+        const request = {
+            origin: positions[0],
+            destination: positions[positions.length - 1],
+            waypoints: waypoints,
+            travelMode: window.google.maps.TravelMode.WALKING, // 关键：指定为步行模式，会自动找桥梁过河
+        };
+
+        state.directionsService.route(request, (response, status) => {
+            if (status === "OK") {
+                // 渲染真实路线到地图上
+                state.directionsRenderer.setDirections(response);
+
+                // 为路线的每一段 (leg) 添加时间气泡标签
+                response.routes[0].legs.forEach((leg, index) => {
+                    // 找到这一段路径大概中间的步骤位置来放置徽章
+                    const middleStep = leg.steps[Math.floor(leg.steps.length / 2)];
+                    const badgeLabel = summary.segmentTimes[index] || leg.duration.text;
+
+                    const badge = new window.google.maps.Marker({
+                        position: middleStep.start_location,
+                        map: state.map,
+                        clickable: false,
+                        zIndex: 120,
+                        icon: createGoogleBadgeIcon(badgeLabel),
+                    });
+                    state.segmentMarkers.push(badge);
+                });
+            } else {
+                console.warn("Directions request failed due to " + status);
+            }
         });
 
+        // 根据所有坐标点缩放视野
         fitGoogleMapToPositions(state.map, positions, 96);
     }
 
     function clearRouteMarkers() {
+        // 清除自定义图钉
         state.routeMarkers.forEach((marker) => marker.setMap(null));
         state.segmentMarkers.forEach((marker) => marker.setMap(null));
         state.routeMarkers = [];
         state.segmentMarkers = [];
-        if (state.routePolyline) {
-            state.routePolyline.setPath([]);
+
+        // 清除真实的导航连线
+        if (state.directionsRenderer) {
+            state.directionsRenderer.setDirections({ routes: [] });
         }
     }
 
