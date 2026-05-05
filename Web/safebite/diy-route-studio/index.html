@@ -1,127 +1,175 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SafeBite | DIY Route Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="./styles.css" />
-    <script defer src="../assets/shared-data.js"></script>
-    <script defer src="../assets/shared-utils.js"></script>
-    <script defer src="./script.js"></script>
-  </head>
-  <body>
-    <div class="page-shell">
-      <header class="page-header">
-        <nav class="top-nav" aria-label="Primary">
-          <a class="nav-tab" href="../restaurant-discovery/index.html">
-            <span class="nav-tab__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"/></svg>
-            </span>
-            Restaurant Discovery
-          </a>
-          <a class="nav-tab" href="../recommended-routes/index.html">
-            <span class="nav-tab__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="m13 3 1.8 4.2L19 9l-4.2 1.8L13 15l-1.8-4.2L7 9l4.2-1.8L13 3Zm-8 8 1.2 2.8L9 15l-2.8 1.2L5 19l-1.2-2.8L1 15l2.8-1.2L5 11Zm13 4 1 2.2L21 18l-2 0.8L18 21l-1-2.2L15 18l2-0.8 1-2.2Z"/></svg>
-            </span>
-            Recommended Routes
-          </a>
-          <a class="nav-tab is-active" href="../diy-route-studio/index.html" aria-current="page">
-            <span class="nav-tab__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M7 5a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 5Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2ZM7 15a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 15Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2Z"/></svg>
-            </span>
-            DIY Route Studio
-          </a>
-        </nav>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SafeBite | DIY Route Studio</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="stylesheet" href="./styles.css" />
+        <script defer src="../assets/shared-data.js"></script>
+        <script defer src="../assets/shared-utils.js"></script>
+        <script defer src="./script.js"></script>
+    </head>
+    <body>
+        <div class="page-shell">
+            <header class="page-header">
+                <nav class="top-nav" aria-label="Primary">
+                    <a class="nav-tab" href="../restaurant-discovery/index.html">
+                        <span class="nav-tab__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"
+                                />
+                            </svg>
+                        </span>
+                        Restaurant Discovery
+                    </a>
+                    <a class="nav-tab" href="../recommended-routes/index.html">
+                        <span class="nav-tab__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="m13 3 1.8 4.2L19 9l-4.2 1.8L13 15l-1.8-4.2L7 9l4.2-1.8L13 3Zm-8 8 1.2 2.8L9 15l-2.8 1.2L5 19l-1.2-2.8L1 15l2.8-1.2L5 11Zm13 4 1 2.2L21 18l-2 0.8L18 21l-1-2.2L15 18l2-0.8 1-2.2Z"
+                                />
+                            </svg>
+                        </span>
+                        Recommended Routes
+                    </a>
+                    <a
+                        class="nav-tab is-active"
+                        href="../diy-route-studio/index.html"
+                        aria-current="page"
+                    >
+                        <span class="nav-tab__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M7 5a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 5Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2ZM7 15a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 15Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2Z"
+                                />
+                            </svg>
+                        </span>
+                        DIY Route Studio
+                    </a>
+                </nav>
 
-        <div class="heading-row">
-          <h1>DIY Route Studio: <span>Plan Your Journey Manually</span></h1>
-          <p class="page-summary">
-            Start from a recommended route or build your own, then reorder stops and watch the Brisbane route update live.
-          </p>
+                <div class="heading-row">
+                    <h1>DIY Route Studio: <span>Plan Your Journey Manually ！</span></h1>
+                    <p class="page-summary">
+                        Start from a recommended route or build your own, then reorder stops
+                        and watch the Brisbane route update live.
+                    </p>
+                </div>
+
+                <label class="search-field search-field--compact">
+                    <span class="search-field__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"
+                            />
+                        </svg>
+                    </span>
+                    <input
+                        id="wishlistSearch"
+                        type="search"
+                        placeholder="Search South Bank..."
+                    />
+                </label>
+            </header>
+
+            <main class="studio-layout">
+                <aside class="studio-sidebar">
+                    <div id="routeImportNotice" class="route-import-notice" hidden></div>
+
+                    <section class="sidebar-section">
+                        <h2>1. My Wishlist (Saved Spots)</h2>
+                        <div id="wishlistList" class="wishlist-list" aria-live="polite"></div>
+                    </section>
+
+                    <section class="sidebar-section">
+                        <h2>2. Your Itinerary / Stop Order</h2>
+                        <div
+                            id="itineraryList"
+                            class="itinerary-list"
+                            aria-live="polite"
+                        ></div>
+                        <div
+                            id="dropZone"
+                            class="drop-zone"
+                            tabindex="0"
+                            role="button"
+                            aria-label="Drop here to add another stop"
+                        >
+                            <span class="drop-zone__plus" aria-hidden="true">+</span>
+                            <span>Drop here to add another stop</span>
+                        </div>
+                    </section>
+
+                    <section class="sidebar-section sidebar-section--summary">
+                        <article class="summary-card">
+                            <div class="summary-card__header">
+                                <h2>Live Itinerary Summary</h2>
+                            </div>
+                            <!-- 修改为 2x2 网格，新增等待时间 -->
+                            <div class="summary-grid">
+                                <div>
+                                    <span class="summary-label">Total Distance</span>
+                                    <strong id="totalDistance">0.0 km</strong>
+                                </div>
+                                <div>
+                                    <span class="summary-label">Est. Walking Time</span>
+                                    <strong id="walkingTime">0h 00m</strong>
+                                </div>
+                                <div>
+                                    <span class="summary-label">Est. Waiting Time</span>
+                                    <strong id="waitingTime">0h 00m</strong>
+                                </div>
+                                <div>
+                                    <span class="summary-label">Price Level</span>
+                                    <strong id="priceLevel">$$</strong>
+                                </div>
+                            </div>
+                            <div class="summary-actions">
+                                <button
+                                    id="clearRouteButton"
+                                    class="button button--ghost"
+                                    type="button"
+                                >
+                                    Clear Route
+                                </button>
+                                <button
+                                    id="confirmRouteButton"
+                                    class="button button--primary"
+                                    type="button"
+                                >
+                                    Confirm Itinerary
+                                </button>
+                            </div>
+                        </article>
+                    </section>
+                </aside>
+
+                <section class="map-panel" aria-label="DIY route map">
+                    <div id="diyMapCallout" class="map-callout"></div>
+                    <div id="diyMap" class="map-canvas"></div>
+                </section>
+            </main>
         </div>
 
-        <label class="search-field search-field--compact">
-          <span class="search-field__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"/></svg>
-          </span>
-          <input id="wishlistSearch" type="search" placeholder="Search South Bank..." />
-        </label>
-      </header>
-
-      <main class="studio-layout">
-        <aside class="studio-sidebar">
-          <div id="routeImportNotice" class="route-import-notice" hidden></div>
-
-          <section class="sidebar-section">
-            <h2>1. My Wishlist (Saved Spots)</h2>
-            <div id="wishlistList" class="wishlist-list" aria-live="polite"></div>
-          </section>
-
-          <section class="sidebar-section">
-            <h2>2. Your Itinerary / Stop Order</h2>
-            <div id="itineraryList" class="itinerary-list" aria-live="polite"></div>
-            <div
-              id="dropZone"
-              class="drop-zone"
-              tabindex="0"
-              role="button"
-              aria-label="Drop here to add another stop"
-            >
-              <span class="drop-zone__plus" aria-hidden="true">+</span>
-              <span>Drop here to add another stop</span>
+        <div id="modalOverlay" class="modal-overlay" hidden></div>
+        <section
+            id="confirmationModal"
+            class="confirmation-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirmationTitle"
+            hidden
+        >
+            <div class="confirmation-modal__content">
+                <h2 id="confirmationTitle">Your food journey is ready!</h2>
+                <p id="confirmationSummary"></p>
+                <button id="closeModalButton" class="button button--primary" type="button">
+                    Close
+                </button>
             </div>
-          </section>
-
-          <section class="sidebar-section sidebar-section--summary">
-            <article class="summary-card">
-              <div class="summary-card__header">
-                <h2>Live Itinerary Summary</h2>
-              </div>
-              <div class="summary-grid">
-                <div>
-                  <span class="summary-label">Total Distance</span>
-                  <strong id="totalDistance">0.0 km</strong>
-                </div>
-                <div>
-                  <span class="summary-label">Estimated Walking Time</span>
-                  <strong id="walkingTime">0h 00m</strong>
-                </div>
-                <div>
-                  <span class="summary-label">Price Level</span>
-                  <strong id="priceLevel">$$</strong>
-                </div>
-              </div>
-              <div class="summary-actions">
-                <button id="clearRouteButton" class="button button--ghost" type="button">Clear Route</button>
-                <button id="confirmRouteButton" class="button button--primary" type="button">Confirm Itinerary</button>
-              </div>
-            </article>
-          </section>
-        </aside>
-
-        <section class="map-panel" aria-label="DIY route map">
-          <div id="diyMapCallout" class="map-callout"></div>
-          <div id="diyMap" class="map-canvas"></div>
         </section>
-      </main>
-    </div>
-
-    <div id="modalOverlay" class="modal-overlay" hidden></div>
-    <section
-      id="confirmationModal"
-      class="confirmation-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="confirmationTitle"
-      hidden
-    >
-      <div class="confirmation-modal__content">
-        <h2 id="confirmationTitle">Your food journey is ready!</h2>
-        <p id="confirmationSummary"></p>
-        <button id="closeModalButton" class="button button--primary" type="button">Close</button>
-      </div>
-    </section>
-  </body>
+    </body>
 </html>
