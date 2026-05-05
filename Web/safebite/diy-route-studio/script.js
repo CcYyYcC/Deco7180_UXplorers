@@ -1,5 +1,3 @@
-const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"; // <-- Replace with your actual API key
-
 document.addEventListener("DOMContentLoaded", () => {
     const { diyWishlist } = window.SafeBiteData;
     const {
