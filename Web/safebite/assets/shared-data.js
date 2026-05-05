@@ -16,7 +16,7 @@
       address: "123 Queen St, Brisbane CBD",
       openNow: true,
       openForLunch: true,
-      image: "../assets/images/restaurant-1.jpg",
+      image: "../assets/images/alexnut-restaurant-646687.jpg",
       coordinates: [153.0248, -27.4687],
     },
     {
@@ -35,7 +35,7 @@
       address: "456 Eagle St, Brisbane CBD",
       openNow: true,
       openForLunch: true,
-      image: "../assets/images/restaurant-2.jpg",
+      image: "../assets/images/joelfazhari-table-5356682.jpg",
       coordinates: [153.0283, -27.4697],
     },
     {
@@ -54,7 +54,7 @@
       address: "789 Adelaide St, Brisbane CBD",
       openNow: true,
       openForLunch: false,
-      image: "../assets/images/restaurant-3.jpg",
+      image: "../assets/images/pexels-outdoor-dining-1846137.jpg",
       coordinates: [153.0206, -27.4716],
     },
     {
@@ -73,7 +73,7 @@
       address: "14 Grey St, South Brisbane",
       openNow: false,
       openForLunch: true,
-      image: "../assets/images/restaurant-placeholder.jpg",
+      image: "../assets/images/pexels-restaurant-1837150.jpg",
       coordinates: [153.0231, -27.4786],
     },
     {
@@ -92,7 +92,7 @@
       address: "31 Grey St, South Bank",
       openNow: true,
       openForLunch: true,
-      image: "../assets/images/restaurant-4.jpg",
+      image: "../assets/images/tho-ge-tavern-8024234.jpg",
       coordinates: [153.0267, -27.4781],
     },
     {
@@ -111,7 +111,7 @@
       address: "51 Fish Ln, South Brisbane",
       openNow: true,
       openForLunch: false,
-      image: "../assets/images/restaurant-1.jpg",
+      image: "../assets/images/alexnut-restaurant-646687.jpg",
       coordinates: [153.0182, -27.4748],
     },
     {
@@ -130,7 +130,7 @@
       address: "30ba Little Stanley St, South Bank",
       openNow: true,
       openForLunch: false,
-      image: "../assets/images/restaurant-3.jpg",
+      image: "../assets/images/pexels-outdoor-dining-1846137.jpg",
       coordinates: [153.0236, -27.4762],
     },
     {
@@ -149,7 +149,7 @@
       address: "167 Grey St, South Bank",
       openNow: true,
       openForLunch: true,
-      image: "../assets/images/restaurant-4.jpg",
+      image: "../assets/images/tho-ge-tavern-8024234.jpg",
       coordinates: [153.0245, -27.4805],
     },
     {
@@ -168,7 +168,7 @@
       address: "88 Margaret St, Brisbane CBD",
       openNow: false,
       openForLunch: true,
-      image: "../assets/images/restaurant-placeholder.jpg",
+      image: "../assets/images/pexels-restaurant-1837150.jpg",
       coordinates: [153.0309, -27.4708],
     },
     {
@@ -187,7 +187,7 @@
       address: "9 Little Stanley St, South Brisbane",
       openNow: true,
       openForLunch: true,
-      image: "../assets/images/restaurant-2.jpg",
+      image: "../assets/images/joelfazhari-table-5356682.jpg",
       coordinates: [153.0278, -27.4738],
     },
   ];
