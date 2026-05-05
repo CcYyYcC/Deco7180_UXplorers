@@ -1,4 +1,4 @@
-const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
+const GOOGLE_MAPS_API_KEY = "AIzaSyDVCI10u73uO-IuoqOKZlq3zgSXcr7g3U0";
 
 document.addEventListener("DOMContentLoaded", () => {
   const { routes, recommendedSavedSpots } = window.SafeBiteData;
