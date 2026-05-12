@@ -1,7 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const { diyWishlist } = window.SafeBiteData;
+    const localWishlist = JSON.parse(localStorage.getItem("safeBiteUserWishlist"));
+    const initialWishlistIds = localWishlist || [...window.SafeBiteData.diyWishlist];
+
     const {
-        calculateItinerarySummary,
         createGoogleBadgeIcon,
         createGooglePinIcon,
         createMapFallback,
@@ -19,12 +20,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const state = {
         query: "",
-        wishlistIds: [...diyWishlist],
+        wishlistIds: initialWishlistIds,
         itineraryIds: savedItinerary?.length
             ? [...savedItinerary]
             : preselectedRoute?.stops?.length
               ? [...preselectedRoute.stops]
-              : diyWishlist.slice(0, 2),
+              : initialWishlistIds.slice(0, 2),
         draggedItem: null,
         map: null,
         mapReady: false,
@@ -32,7 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
         segmentMarkers: [],
         directionsService: null,
         directionsRenderer: null,
-        previousSummary: null, // 用于记录上一次的状态以计算 Delta
+        previousSummary: null,
+        customStops: getSavedCustomStops(),
+        savedTemplates: getSavedTemplates(),
+        highlightMarker: null,
     };
 
     const refs = {
@@ -45,15 +49,34 @@ document.addEventListener("DOMContentLoaded", () => {
         waitingTime: document.querySelector("#waitingTime"),
         priceLevel: document.querySelector("#priceLevel"),
         clearRouteButton: document.querySelector("#clearRouteButton"),
-        confirmRouteButton: document.querySelector("#confirmRouteButton"),
+
+        // ✅ 按钮更名与合并
+        saveItineraryButton: document.querySelector("#saveItineraryButton"),
+        templateNameInput: document.querySelector("#templateNameInput"),
+        savedTemplatesList: document.querySelector("#savedTemplatesList"),
+
         mapElement: document.querySelector("#diyMap"),
         mapCallout: document.querySelector("#diyMapCallout"),
         routeImportNotice: document.querySelector("#routeImportNotice"),
+        clearCustomStopsButton: document.querySelector("#clearCustomStopsButton"),
+
+        // 侧边栏控制
+        sidebarToggleBtn: document.querySelector("#sidebarToggleBtn"),
+        studioSidebar: document.querySelector("#studioSidebar"),
+
+        // 弹窗
         modal: document.querySelector("#confirmationModal"),
         modalOverlay: document.querySelector("#modalOverlay"),
         closeModalButton: document.querySelector("#closeModalButton"),
         confirmationSummary: document.querySelector("#confirmationSummary"),
     };
+
+    const ICON_PATH = "../assets/Icons%20for%20DIY%20Studio/";
+
+    function getAnyStopById(id) {
+        if (id.startsWith("custom_")) return state.customStops[id];
+        return getRestaurantById(id);
+    }
 
     initialize();
 
@@ -65,450 +88,426 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function bindEvents() {
-        refs.wishlistSearch.addEventListener("input", (event) => {
-            state.query = event.currentTarget.value.trim().toLowerCase();
+        refs.wishlistSearch.addEventListener("input", (e) => {
+            state.query = e.currentTarget.value.trim().toLowerCase();
             renderWishlist();
         });
 
-        refs.dropZone.addEventListener("dragover", (event) => {
-            event.preventDefault();
+        // ✅ 侧边栏折叠事件
+        refs.sidebarToggleBtn.addEventListener("click", () => {
+            refs.studioSidebar.classList.toggle("is-collapsed");
+        });
+
+        refs.dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
             refs.dropZone.classList.add("is-active");
         });
-
-        refs.dropZone.addEventListener("dragleave", () => {
+        refs.dropZone.addEventListener("dragleave", () =>
+            refs.dropZone.classList.remove("is-active"),
+        );
+        refs.dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
             refs.dropZone.classList.remove("is-active");
-        });
-
-        refs.dropZone.addEventListener("drop", (event) => {
-            event.preventDefault();
-            refs.dropZone.classList.remove("is-active");
-            if (!state.draggedItem) {
-                return;
-            }
-            insertDraggedItemAtEnd();
+            if (state.draggedItem) insertDraggedItemAtEnd();
         });
 
         refs.clearRouteButton.addEventListener("click", () => {
-            state.itineraryIds = [];
+            if (confirm("Clear current itinerary?")) {
+                state.itineraryIds = [];
+                persistItinerary();
+                render();
+            }
+        });
+
+        refs.clearCustomStopsButton.addEventListener("click", () => {
+            state.itineraryIds = state.itineraryIds.filter((id) => !id.startsWith("custom_"));
             persistItinerary();
             render();
         });
 
-        refs.confirmRouteButton.addEventListener("click", openModal);
+        // ✅ 合并的 Save Itinerary 逻辑
+        refs.saveItineraryButton.addEventListener("click", () => {
+            if (state.itineraryIds.length === 0) return;
+            const name = refs.templateNameInput.value.trim();
+
+            if (name) {
+                // 如果填了名字，就存入下方模版列表
+                state.savedTemplates[name] = [...state.itineraryIds];
+                localStorage.setItem(
+                    "safeBiteSavedTemplates",
+                    JSON.stringify(state.savedTemplates),
+                );
+                refs.templateNameInput.value = "";
+                renderTemplates();
+            }
+            openModal(name);
+        });
+
         refs.closeModalButton.addEventListener("click", closeModal);
         refs.modalOverlay.addEventListener("click", closeModal);
-
         document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") {
-                closeModal();
-            }
+            if (event.key === "Escape") closeModal();
         });
     }
 
     async function initializeMap() {
-        if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY") {
-            refs.mapCallout.hidden = true;
-            createMapFallback(
-                refs.mapElement,
-                "Map preview requires a Google Maps API key. Add it near the top of diy-route-studio/script.js.",
-            );
-            return;
-        }
-
-        try {
-            await loadGoogleMapsApi(GOOGLE_MAPS_API_KEY);
-        } catch (error) {
-            refs.mapCallout.hidden = true;
-            createMapFallback(
-                refs.mapElement,
-                "Google Maps failed to load. Check the API key and make sure the Maps JavaScript API is enabled.",
-            );
-            return;
-        }
-
+        if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY.includes("YOUR_API")) return;
+        await loadGoogleMapsApi(GOOGLE_MAPS_API_KEY);
         state.map = new window.google.maps.Map(refs.mapElement, {
-            center: { lat: -27.476, lng: 153.024 }, // Brisbane CBD
+            center: { lat: -27.476, lng: 153.024 },
             zoom: 14.2,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
-            clickableIcons: false,
             gestureHandling: "cooperative",
+            draggableCursor: "crosshair",
         });
 
-        // 初始化导航服务与渲染器，替代原本的 Polyline
         state.directionsService = new window.google.maps.DirectionsService();
         state.directionsRenderer = new window.google.maps.DirectionsRenderer({
             map: state.map,
-            suppressMarkers: true, // 隐藏默认图钉，保留我们的红色圆点
-            preserveViewport: true, // 避免自动缩放冲突
-            polylineOptions: {
-                strokeColor: "#ef4444", // 保持原来的红色线条风格
-                strokeOpacity: 0.94,
-                strokeWeight: 5,
-            },
+            suppressMarkers: true,
+            polylineOptions: { strokeColor: "#ef4444", strokeOpacity: 0.9, strokeWeight: 5 },
+        });
+
+        state.map.addListener("click", (e) => {
+            const customId = "custom_" + Date.now();
+            state.customStops[customId] = {
+                id: customId,
+                name: "📍 Map Location",
+                cuisine: "Custom Point",
+                priceLevel: "-",
+                waitTime: "0 mins",
+                coordinates: { lat: e.latLng.lat(), lng: e.latLng.lng() },
+                isCustom: true,
+            };
+            localStorage.setItem("safeBiteCustomStops", JSON.stringify(state.customStops));
+            state.itineraryIds.push(customId);
+            persistItinerary();
+            render();
         });
 
         state.mapReady = true;
-        refs.mapCallout.hidden = false;
-    }
-
-    function getPreselectedRoute() {
-        try {
-            const raw = localStorage.getItem("safeBiteSelectedRoute");
-            return raw ? JSON.parse(raw) : null;
-        } catch (error) {
-            return null;
-        }
-    }
-
-    function getSavedItinerary() {
-        try {
-            const raw = localStorage.getItem("safeBiteDIYItinerary");
-            return raw ? JSON.parse(raw) : null;
-        } catch (error) {
-            return null;
-        }
-    }
-
-    function render() {
-        renderImportNotice();
-        renderWishlist();
-        renderItinerary();
-        renderSummary();
         drawItineraryOnMap();
     }
 
-    function renderImportNotice() {
-        if (!preselectedRoute) {
-            refs.routeImportNotice.hidden = true;
-            return;
+    function render() {
+        renderWishlist();
+        renderItinerary();
+        renderTemplates();
+
+        if (state.itineraryIds.length === 0) {
+            updateDashboard(0, 0);
+            refs.saveItineraryButton.disabled = true;
+            refs.clearRouteButton.disabled = true;
+            refs.mapCallout.innerHTML = `<strong>No active itinerary</strong><span>Click on the map or drag saved spots to build your route.</span>`;
+        } else {
+            refs.saveItineraryButton.disabled = false;
+            refs.clearRouteButton.disabled = false;
         }
 
-        refs.routeImportNotice.hidden = false;
-        refs.routeImportNotice.innerHTML = `
-      <strong>Imported route:</strong>
-      <span>${escapeHtml(preselectedRoute.name)} · ${preselectedRoute.stops.length} suggested stops. You can reorder or remove any stop below.</span>
-    `;
+        drawItineraryOnMap();
     }
 
     function renderWishlist() {
-        const filteredRestaurants = state.wishlistIds
-            .map((restaurantId) => getRestaurantById(restaurantId))
-            .filter((restaurant) => {
-                if (!restaurant) {
-                    return false;
-                }
-                const haystack =
-                    `${restaurant.name} ${restaurant.cuisine} ${restaurant.category}`.toLowerCase();
-                return state.query.length === 0 || haystack.includes(state.query);
-            });
+        const filtered = state.wishlistIds.map(getAnyStopById).filter((r) => {
+            if (!r) return false;
+            const haystack = `${r.name} ${r.cuisine}`.toLowerCase();
+            return state.query.length === 0 || haystack.includes(state.query);
+        });
 
-        refs.wishlistList.innerHTML = filteredRestaurants
+        refs.wishlistList.innerHTML = filtered
             .map(
-                (restaurant) => `
-          <article
-            class="wishlist-card"
-            draggable="true"
-            tabindex="0"
-            data-wishlist-id="${restaurant.id}"
-            aria-label="${escapeHtml(restaurant.name)}"
-          >
-            <div class="drag-handle" aria-hidden="true">
-              <span></span><span></span><span></span><span></span><span></span><span></span>
+                (r) => `
+          <article class="wishlist-card" draggable="true" data-wishlist-id="${r.id}" style="cursor: pointer;">
+            <div class="drag-handle"><span></span><span></span><span></span></div>
+            <img src="${r.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100"}" class="thumbnail" />
+            <div style="flex:1">
+              <h3 style="font-size:1rem;margin:0;margin-bottom:2px;">${escapeHtml(r.name)}</h3>
+              <div class="wishlist-meta"><span class="grade-pill">${r.safetyGrade || "A"}</span> <span>${r.priceLevel || "-"}</span></div>
             </div>
-            <img src="${restaurant.image}" alt="${escapeHtml(restaurant.name)} thumbnail" />
-            <div style="width: 100%;">
-              <h3>${escapeHtml(restaurant.name)}</h3>
-              
-              <div class="wishlist-meta">
-                <button type="button" class="grade-pill grade-pill--interactive" title="Verify Official Safety Report">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-                  ${restaurant.safetyGrade} / ${restaurant.safetyPercent}%
-                </button>
-                <span>${restaurant.priceLevel}</span>
-              </div>
-              
-              <div class="wishlist-meta wishlist-actions">
-                <span>${escapeHtml(restaurant.cuisine)}</span>
-                <button type="button" class="button-menu-preview" aria-label="View Menu Images">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                  Menu
-                </button>
-              </div>
-            </div>
+            <button class="wishlist-action-btn" data-remove-id="${r.id}"><img src="${ICON_PATH}trash.png" class="ui-icon"></button>
           </article>
         `,
             )
             .join("");
 
         refs.wishlistList.querySelectorAll(".wishlist-card").forEach((card) => {
-            card.addEventListener("dragstart", () => {
+            card.onclick = (e) => {
+                if (e.target.closest(".wishlist-action-btn")) return;
+                const stop = getAnyStopById(card.dataset.wishlistId);
+                const pos = stop.isCustom ? stop.coordinates : toLatLng(stop.coordinates);
+                state.map.panTo(pos);
+                state.map.setZoom(16);
+                if (state.highlightMarker) state.highlightMarker.setMap(null);
+                state.highlightMarker = new window.google.maps.Marker({
+                    position: pos,
+                    map: state.map,
+                    animation: window.google.maps.Animation.DROP,
+                    zIndex: 9999,
+                    icon: {
+                        url: ICON_PATH + "heart.png",
+                        scaledSize: new google.maps.Size(40, 40),
+                        anchor: new google.maps.Point(20, 40),
+                    },
+                });
+            };
+            card.ondragstart = () => {
                 state.draggedItem = {
                     source: "wishlist",
                     restaurantId: card.dataset.wishlistId,
                 };
-                card.classList.add("is-dragging");
-            });
-            card.addEventListener("dragend", () => {
-                state.draggedItem = null;
-                card.classList.remove("is-dragging");
-                refs.dropZone.classList.remove("is-active");
-            });
+            };
+        });
+
+        refs.wishlistList.querySelectorAll("[data-remove-id]").forEach((btn) => {
+            btn.onclick = () => {
+                state.wishlistIds = state.wishlistIds.filter(
+                    (id) => id !== btn.dataset.removeId,
+                );
+                localStorage.setItem(
+                    "safeBiteUserWishlist",
+                    JSON.stringify(state.wishlistIds),
+                );
+                render();
+            };
         });
     }
 
     function renderItinerary() {
         refs.itineraryList.innerHTML = state.itineraryIds
-            .map((restaurantId, index) => {
-                const restaurant = getRestaurantById(restaurantId);
+            .map((id, idx) => {
+                const s = getAnyStopById(id);
+                if (!s) return "";
+                const inWish = state.wishlistIds.includes(s.id);
                 return `
-          <article
-            class="itinerary-card"
-            draggable="true"
-            data-itinerary-id="${restaurant.id}"
-            tabindex="0"
-            aria-label="${escapeHtml(restaurant.name)} stop ${index + 1}"
-          >
-            <span class="stop-number">${index + 1}</span>
-            <div>
-              <h3>${escapeHtml(restaurant.name)}</h3>
-              <div class="itinerary-meta">
-                <span>${restaurant.waitTime} wait</span>
-                <span>•</span>
-                <span>${escapeHtml(restaurant.cuisine)}</span>
-              </div>
+          <article class="itinerary-card" draggable="true" data-itinerary-id="${s.id}">
+            <span class="stop-number" style="${s.isCustom ? "background:#8c7b61" : ""}">${idx + 1}</span>
+            <div style="flex:1">
+              <h3 style="font-size:0.95rem;margin:0;margin-bottom:2px;">${s.isCustom ? "📌" : "🍽️"} ${escapeHtml(s.name)}</h3>
+              <div class="itinerary-meta" style="font-size:0.75rem"><span>${s.waitTime || "0 mins"} wait</span></div>
             </div>
-            <button class="remove-stop" type="button" data-remove-id="${restaurant.id}" aria-label="Remove ${escapeHtml(
-                restaurant.name,
-            )}">×</button>
-          </article>
-        `;
+            <button class="wishlist-action-btn" data-add-wish="${s.id}">
+                <img src="${ICON_PATH}heart.png" class="ui-icon" style="${inWish ? "" : "opacity:0.3;filter:grayscale(1)"}">
+            </button>
+            <button class="remove-stop" data-remove-id="${s.id}"><img src="${ICON_PATH}trash.png" class="ui-icon"></button>
+          </article>`;
             })
             .join("");
 
-        refs.itineraryList.querySelectorAll(".remove-stop").forEach((button) => {
-            button.addEventListener("click", () => {
+        refs.itineraryList.querySelectorAll("[data-add-wish]").forEach((btn) => {
+            btn.onclick = () => {
+                if (!state.wishlistIds.includes(btn.dataset.addWish)) {
+                    state.wishlistIds.unshift(btn.dataset.addWish);
+                    localStorage.setItem(
+                        "safeBiteUserWishlist",
+                        JSON.stringify(state.wishlistIds),
+                    );
+                    render();
+                }
+            };
+        });
+
+        refs.itineraryList.querySelectorAll(".remove-stop").forEach((btn) => {
+            btn.onclick = () => {
                 state.itineraryIds = state.itineraryIds.filter(
-                    (restaurantId) => restaurantId !== button.dataset.removeId,
+                    (id) => id !== btn.dataset.removeId,
                 );
                 persistItinerary();
                 render();
-            });
+            };
         });
 
         refs.itineraryList.querySelectorAll(".itinerary-card").forEach((card) => {
-            card.addEventListener("dragstart", () => {
+            card.ondragstart = () => {
                 state.draggedItem = {
                     source: "itinerary",
                     restaurantId: card.dataset.itineraryId,
                 };
-                card.classList.add("is-dragging");
-            });
-
-            card.addEventListener("dragend", () => {
-                state.draggedItem = null;
-                card.classList.remove("is-dragging");
-                refs.dropZone.classList.remove("is-active");
-            });
-
-            card.addEventListener("dragover", (event) => {
-                event.preventDefault();
-            });
-
-            card.addEventListener("drop", (event) => {
-                event.preventDefault();
-                if (!state.draggedItem) {
-                    return;
-                }
-                insertDraggedItemBefore(card.dataset.itineraryId);
-            });
+            };
+            card.ondragover = (e) => e.preventDefault();
+            card.ondrop = (e) => {
+                e.preventDefault();
+                if (state.draggedItem) insertDraggedItemBefore(card.dataset.itineraryId);
+            };
         });
     }
 
-    function insertDraggedItemAtEnd() {
-        const { source, restaurantId } = state.draggedItem;
-        if (source === "wishlist") {
-            if (!state.itineraryIds.includes(restaurantId)) {
-                state.itineraryIds.push(restaurantId);
-            }
-        } else {
-            state.itineraryIds = state.itineraryIds.filter((id) => id !== restaurantId);
-            state.itineraryIds.push(restaurantId);
-        }
-        persistItinerary();
-        render();
-    }
-
-    function insertDraggedItemBefore(targetId) {
-        const { source, restaurantId } = state.draggedItem;
-        const nextIds = state.itineraryIds.filter((id) => id !== restaurantId);
-        const targetIndex = nextIds.indexOf(targetId);
-
-        if (source === "wishlist" && state.itineraryIds.includes(restaurantId)) {
-            return;
-        }
-
-        nextIds.splice(targetIndex, 0, restaurantId);
-        state.itineraryIds = nextIds;
-        persistItinerary();
-        render();
-    }
-
-    function generateDeltaHtml(diff, unit) {
-        if (Math.abs(diff) < 0.1) return "";
-        const isIncrease = diff > 0;
-        const colorClass = isIncrease ? "is-positive" : "is-negative";
-        const sign = isIncrease ? "+" : "";
-        const val = unit === "km" ? diff.toFixed(1) : Math.round(diff);
-        return `<span class="delta-badge ${colorClass}">${sign}${val}${unit}</span>`;
-    }
-
-    function renderSummary() {
-        const summary = calculateItinerarySummary(state.itineraryIds);
-        const stops = state.itineraryIds.map((id) => getRestaurantById(id)).filter(Boolean);
-
-        let totalWaitMins = 0;
-        stops.forEach((stop) => {
-            const min = parseInt(stop.waitTime);
-            if (!isNaN(min)) totalWaitMins += min;
+    function updateDashboard(distKm, walkMins) {
+        const stops = state.itineraryIds.map(getAnyStopById).filter(Boolean);
+        let wait = 0;
+        let priceLevels = [];
+        stops.forEach((s) => {
+            wait += parseInt(s.waitTime) || 0;
+            if (s.priceLevel && s.priceLevel.includes("$"))
+                priceLevels.push(s.priceLevel.length);
         });
 
-        const currentData = {
-            dist: summary.totalDistance,
-            walk: summary.totalWalkingMinutes,
-            wait: totalWaitMins,
+        let finalPrice = "-";
+        if (priceLevels.length > 0)
+            finalPrice = "$".repeat(
+                Math.round(priceLevels.reduce((a, b) => a + b, 0) / priceLevels.length),
+            );
+
+        const current = { dist: distKm, walk: walkMins, wait: wait };
+        const prev = state.previousSummary || current;
+
+        const genDelta = (now, old, unit) => {
+            const diff = now - old;
+            if (Math.abs(diff) < 0.1) return "";
+            return `<span class="delta-badge ${diff > 0 ? "is-positive" : "is-negative"}">${diff > 0 ? "+" : ""}${unit === "km" ? diff.toFixed(1) : Math.round(diff)}${unit}</span>`;
         };
 
-        const prev = state.previousSummary || currentData;
+        refs.totalDistance.innerHTML = `${formatKm(current.dist)} ${genDelta(current.dist, prev.dist, "km")}`;
+        refs.walkingTime.innerHTML = `${formatDurationClock(current.walk)} ${genDelta(current.walk, prev.walk, "m")}`;
+        refs.waitingTime.innerHTML = `${formatDurationClock(current.wait)} ${genDelta(current.wait, prev.wait, "m")}`;
+        refs.priceLevel.textContent = finalPrice;
+        state.previousSummary = current;
 
-        refs.totalDistance.innerHTML = `${formatKm(currentData.dist)} ${generateDeltaHtml(currentData.dist - prev.dist, "km")}`;
-        refs.walkingTime.innerHTML = `${formatDurationClock(currentData.walk)} ${generateDeltaHtml(currentData.walk - prev.walk, "m")}`;
-        refs.waitingTime.innerHTML = `${formatDurationClock(currentData.wait)} ${generateDeltaHtml(currentData.wait - prev.wait, "m")}`;
-        refs.priceLevel.textContent = summary.priceLevel;
-
-        state.previousSummary = currentData;
-        refs.confirmRouteButton.disabled = state.itineraryIds.length === 0;
-
-        if (state.itineraryIds.length === 0) {
-            refs.mapCallout.innerHTML = `
-        <strong>No active itinerary</strong>
-        <span>Drag saved spots into the stop order list to build your own route.</span>
-      `;
-            return;
+        if (stops.length > 0) {
+            refs.mapCallout.innerHTML = `<strong>Current DIY route</strong><span>${stops.length} Stops · ${formatKm(current.dist)} · ${formatDurationClock(current.walk)} walk</span>`;
         }
+    }
 
-        const stopNames = summary.stops.map((stop) => stop.name).join(" → ");
-        refs.mapCallout.innerHTML = `
-      <strong>Current DIY route</strong>
-      <span>${escapeHtml(stopNames)} · ${formatKm(summary.totalDistance)} · ${formatDurationClock(
-          summary.totalWalkingMinutes,
-      )} walk · ${formatDurationClock(totalWaitMins)} wait</span>
-    `;
+    // ✅ 修复：红线遗留 BUG，在每次画图前彻底强制清理 API 渲染器
+    function clearRouteMarkers() {
+        state.routeMarkers.forEach((m) => m.setMap(null));
+        state.routeMarkers = [];
+        state.segmentMarkers.forEach((m) => m.setMap(null));
+        state.segmentMarkers = [];
+        if (state.highlightMarker) {
+            state.highlightMarker.setMap(null);
+            state.highlightMarker = null;
+        }
+        // 最核心的清理代码
+        if (state.directionsRenderer) state.directionsRenderer.setDirections({ routes: [] });
     }
 
     function drawItineraryOnMap() {
-        if (!state.mapReady || !state.map) {
-            return;
-        }
+        if (!state.mapReady) return;
 
-        clearRouteMarkers();
+        clearRouteMarkers(); // 清理旧数据
 
-        const stops = state.itineraryIds
-            .map((restaurantId) => getRestaurantById(restaurantId))
+        const stops = state.itineraryIds.map(getAnyStopById).filter(Boolean);
+        const positions = stops
+            .map((s) => (s.isCustom ? s.coordinates : toLatLng(s.coordinates)))
             .filter(Boolean);
-        const positions = stops.map((stop) => toLatLng(stop.coordinates));
 
-        if (stops.length === 0) {
+        // ✅ 如果全部被 Clear 删除了，重置中心点
+        if (positions.length === 0) {
             state.map.setCenter({ lat: -27.476, lng: 153.024 });
             state.map.setZoom(14.2);
             return;
         }
 
-        // 1. 绘制我们自定义的带字母（A, B, C）的红色打卡图钉
         positions.forEach((position, index) => {
-            const marker = new window.google.maps.Marker({
-                position,
-                map: state.map,
-                title: `${stops[index].name} stop ${index + 1}`,
-                zIndex: 400,
-                icon: createGooglePinIcon({
-                    fillColor: "#ef4444",
-                    text: String.fromCharCode(65 + index),
-                    scale: 1,
+            const isCustom = stops[index].isCustom;
+            state.routeMarkers.push(
+                new window.google.maps.Marker({
+                    position,
+                    map: state.map,
+                    zIndex: 400,
+                    icon: createGooglePinIcon({
+                        fillColor: isCustom ? "#b88331" : "#ef4444",
+                        text: String.fromCharCode(65 + index),
+                        scale: 1,
+                    }),
                 }),
-            });
-            state.routeMarkers.push(marker);
+            );
         });
 
-        const summary = calculateItinerarySummary(state.itineraryIds);
-
-        // 如果只有一个地点，仅聚焦，不计算路线
         if (positions.length === 1) {
             fitGoogleMapToPositions(state.map, positions, 96);
+            updateDashboard(0, 0);
             return;
         }
 
-        // 2. 如果有多个地点，调用 Google Directions API 规划【真实步行】路线
         const waypoints = positions
             .slice(1, -1)
             .map((pos) => ({ location: pos, stopover: true }));
-        const request = {
-            origin: positions[0],
-            destination: positions[positions.length - 1],
-            waypoints: waypoints,
-            travelMode: window.google.maps.TravelMode.WALKING, // 关键：指定为步行模式，会自动找桥梁过河
-        };
-
-        state.directionsService.route(request, (response, status) => {
-            if (status === "OK") {
-                // 渲染真实路线到地图上
-                state.directionsRenderer.setDirections(response);
-
-                // 为路线的每一段 (leg) 添加时间气泡标签
-                response.routes[0].legs.forEach((leg, index) => {
-                    // 找到这一段路径大概中间的步骤位置来放置徽章
-                    const middleStep = leg.steps[Math.floor(leg.steps.length / 2)];
-                    const badgeLabel = summary.segmentTimes[index] || leg.duration.text;
-
-                    const badge = new window.google.maps.Marker({
-                        position: middleStep.start_location,
-                        map: state.map,
-                        clickable: false,
-                        zIndex: 120,
-                        icon: createGoogleBadgeIcon(badgeLabel),
+        state.directionsService.route(
+            {
+                origin: positions[0],
+                destination: positions[positions.length - 1],
+                waypoints: waypoints,
+                travelMode: window.google.maps.TravelMode.WALKING,
+            },
+            (response, status) => {
+                if (status === "OK") {
+                    state.directionsRenderer.setDirections(response);
+                    let totalMeters = 0;
+                    let totalSeconds = 0;
+                    response.routes[0].legs.forEach((leg) => {
+                        totalMeters += leg.distance.value;
+                        totalSeconds += leg.duration.value;
+                        const middleStep = leg.steps[Math.floor(leg.steps.length / 2)];
+                        state.segmentMarkers.push(
+                            new window.google.maps.Marker({
+                                position: middleStep.start_location,
+                                map: state.map,
+                                clickable: false,
+                                zIndex: 120,
+                                icon: createGoogleBadgeIcon(leg.duration.text),
+                            }),
+                        );
                     });
-                    state.segmentMarkers.push(badge);
-                });
-            } else {
-                console.warn("Directions request failed due to " + status);
-            }
-        });
-
-        // 根据所有坐标点缩放视野
+                    updateDashboard(totalMeters / 1000, Math.round(totalSeconds / 60));
+                } else {
+                    updateDashboard(0, 0);
+                }
+            },
+        );
         fitGoogleMapToPositions(state.map, positions, 96);
     }
 
-    function clearRouteMarkers() {
-        // 清除自定义图钉
-        state.routeMarkers.forEach((marker) => marker.setMap(null));
-        state.segmentMarkers.forEach((marker) => marker.setMap(null));
-        state.routeMarkers = [];
-        state.segmentMarkers = [];
+    function renderTemplates() {
+        if (!refs.savedTemplatesList) return;
+        refs.savedTemplatesList.innerHTML = Object.keys(state.savedTemplates)
+            .map(
+                (name) => `
+            <div class="template-tag-group">
+                <button class="load-template-btn" data-name="${escapeHtml(name)}">
+                    <img src="${ICON_PATH}calendar.png" class="ui-icon"> ${escapeHtml(name)}
+                </button>
+                <button class="delete-template-btn" data-name="${escapeHtml(name)}">
+                    <img src="${ICON_PATH}trash.png" class="ui-icon">
+                </button>
+            </div>
+        `,
+            )
+            .join("");
 
-        // 清除真实的导航连线
-        if (state.directionsRenderer) {
-            state.directionsRenderer.setDirections({ routes: [] });
-        }
+        refs.savedTemplatesList.querySelectorAll(".load-template-btn").forEach(
+            (b) =>
+                (b.onclick = () => {
+                    state.itineraryIds = [...state.savedTemplates[b.dataset.name]];
+                    persistItinerary();
+                    render();
+                }),
+        );
+        refs.savedTemplatesList.querySelectorAll(".delete-template-btn").forEach(
+            (b) =>
+                (b.onclick = () => {
+                    delete state.savedTemplates[b.dataset.name];
+                    localStorage.setItem(
+                        "safeBiteSavedTemplates",
+                        JSON.stringify(state.savedTemplates),
+                    );
+                    renderTemplates();
+                }),
+        );
     }
 
-    function openModal() {
-        const summary = calculateItinerarySummary(state.itineraryIds);
-        refs.confirmationSummary.textContent = `${state.itineraryIds.length} stop${
-            state.itineraryIds.length === 1 ? "" : "s"
-        } · ${formatKm(summary.totalDistance)} total distance · ${formatDurationClock(
-            summary.totalWalkingMinutes,
-        )} walking time.`;
+    function openModal(savedName) {
+        const stopsCount = state.itineraryIds.length;
+        if (stopsCount === 0) return;
+
+        let extraMsg = savedName
+            ? `It has been saved as <strong>${escapeHtml(savedName)}</strong> below.`
+            : `<span style="font-size: 0.9rem; color: #8c7b61;">💡 <em>Tip: You didn't enter a name. You can still name it and save it for future use!</em></span>`;
+
+        refs.confirmationSummary.innerHTML = `
+            Awesome! You have successfully planned a food journey with <strong>${stopsCount} stops</strong>. 
+            <br><br> ${extraMsg}
+        `;
+
         refs.modal.hidden = false;
         refs.modalOverlay.hidden = false;
         requestAnimationFrame(() => {
@@ -519,10 +518,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function closeModal() {
-        if (refs.modal.hidden) {
-            return;
-        }
-
         refs.modal.classList.remove("is-open");
         refs.modalOverlay.classList.remove("is-visible");
         window.setTimeout(() => {
@@ -531,7 +526,50 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 220);
     }
 
+    function getSavedCustomStops() {
+        try {
+            return JSON.parse(localStorage.getItem("safeBiteCustomStops")) || {};
+        } catch (e) {
+            return {};
+        }
+    }
+    function getSavedTemplates() {
+        try {
+            return JSON.parse(localStorage.getItem("safeBiteSavedTemplates")) || {};
+        } catch (e) {
+            return {};
+        }
+    }
+    function getPreselectedRoute() {
+        try {
+            return JSON.parse(localStorage.getItem("safeBiteSelectedRoute"));
+        } catch (e) {
+            return null;
+        }
+    }
+    function getSavedItinerary() {
+        try {
+            return JSON.parse(localStorage.getItem("safeBiteDIYItinerary"));
+        } catch (e) {
+            return null;
+        }
+    }
     function persistItinerary() {
         localStorage.setItem("safeBiteDIYItinerary", JSON.stringify(state.itineraryIds));
+    }
+
+    function insertDraggedItemAtEnd() {
+        const { restaurantId } = state.draggedItem;
+        if (!state.itineraryIds.includes(restaurantId)) state.itineraryIds.push(restaurantId);
+        persistItinerary();
+        render();
+    }
+    function insertDraggedItemBefore(targetId) {
+        const { restaurantId } = state.draggedItem;
+        const nextIds = state.itineraryIds.filter((id) => id !== restaurantId);
+        nextIds.splice(nextIds.indexOf(targetId), 0, restaurantId);
+        state.itineraryIds = nextIds;
+        persistItinerary();
+        render();
     }
 });

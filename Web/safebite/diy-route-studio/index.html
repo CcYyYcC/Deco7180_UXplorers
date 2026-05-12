@@ -8,7 +8,6 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="stylesheet" href="./styles.css" />
 
-        <!-- ✅ 新增：在最前面加载本地配置（包含 API Key） -->
         <script src="../config.js"></script>
 
         <script defer src="../assets/shared-data.js"></script>
@@ -68,8 +67,8 @@
                 <div class="heading-row">
                     <h1>DIY Route Studio: <span>Plan Your Journey Manually</span></h1>
                     <p class="page-summary">
-                        Start from a recommended route or build your own, then reorder stops
-                        and watch the Brisbane route update live.
+                        Manage your wishlist, drag spots to itinerary, or
+                        <strong>click on the map</strong> to plan your custom food journey.
                     </p>
                 </div>
 
@@ -90,7 +89,19 @@
             </header>
 
             <main class="studio-layout">
-                <aside class="studio-sidebar">
+                <aside class="studio-sidebar" id="studioSidebar">
+                    <button
+                        id="sidebarToggleBtn"
+                        class="sidebar-toggle-btn"
+                        title="Toggle Sidebar"
+                    >
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"
+                            />
+                        </svg>
+                    </button>
+
                     <div id="routeImportNotice" class="route-import-notice" hidden></div>
 
                     <section class="sidebar-section">
@@ -99,7 +110,28 @@
                     </section>
 
                     <section class="sidebar-section">
-                        <h2>2. Your Itinerary / Stop Order</h2>
+                        <div
+                            style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                margin-bottom: var(--space-4);
+                            "
+                        >
+                            <h2 style="margin: 0">2. Your Itinerary</h2>
+                            <button
+                                id="clearCustomStopsButton"
+                                class="clear-clicks-btn"
+                                title="Remove all manually clicked map points"
+                            >
+                                <img
+                                    src="../assets/Icons%20for%20DIY%20Studio/clean.png"
+                                    class="ui-icon"
+                                    alt="Clean"
+                                />
+                                Clear Clicks
+                            </button>
+                        </div>
                         <div
                             id="itineraryList"
                             class="itinerary-list"
@@ -113,7 +145,7 @@
                             aria-label="Drop here to add another stop"
                         >
                             <span class="drop-zone__plus" aria-hidden="true">+</span>
-                            <span>Drop here to add another stop</span>
+                            <span>Drop spots or click on map</span>
                         </div>
                     </section>
 
@@ -122,7 +154,7 @@
                             <div class="summary-card__header">
                                 <h2>Live Itinerary Summary</h2>
                             </div>
-                            <!-- 修改为 2x2 网格，新增等待时间 -->
+
                             <div class="summary-grid">
                                 <div>
                                     <span class="summary-label">Total Distance</span>
@@ -141,6 +173,17 @@
                                     <strong id="priceLevel">$$</strong>
                                 </div>
                             </div>
+
+                            <div class="template-section">
+                                <span class="summary-label">Save Route Template</span>
+                                <input
+                                    type="text"
+                                    id="templateNameInput"
+                                    class="full-width-input"
+                                    placeholder="e.g., Day 1: Museum & Dinner"
+                                />
+                            </div>
+
                             <div class="summary-actions">
                                 <button
                                     id="clearRouteButton"
@@ -150,13 +193,15 @@
                                     Clear Route
                                 </button>
                                 <button
-                                    id="confirmRouteButton"
+                                    id="saveItineraryButton"
                                     class="button button--primary"
                                     type="button"
                                 >
-                                    Confirm Itinerary
+                                    Save Itinerary
                                 </button>
                             </div>
+
+                            <div id="savedTemplatesList" class="template-tags-column"></div>
                         </article>
                     </section>
                 </aside>
@@ -178,7 +223,7 @@
             hidden
         >
             <div class="confirmation-modal__content">
-                <h2 id="confirmationTitle">Your food journey is ready!</h2>
+                <h2 id="confirmationTitle">Your food journey is saved!</h2>
                 <p id="confirmationSummary"></p>
                 <button id="closeModalButton" class="button button--primary" type="button">
                     Close
