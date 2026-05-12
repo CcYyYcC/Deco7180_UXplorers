@@ -1,118 +1,6 @@
 const GOOGLE_MAPS_API_KEY = "AIzaSyDVCI10u73uO-IuoqOKZlq3zgSXcr7g3U0";
 
 document.addEventListener("DOMContentLoaded", () => {
-    function drawAttractionLayer() {
-        if (!state.mapReady || !state.map) {
-            return;
-        }
-
-        clearAttractionLayer();
-
-        attractionAreas.forEach((area) => {
-            const polygon = new window.google.maps.Polygon({
-                paths: area.polygon,
-                map: state.map,
-                strokeColor: area.color,
-                strokeOpacity: 0.95,
-                strokeWeight: 3,
-                fillColor: area.color,
-                fillOpacity: 0.22,
-                zIndex: 40,
-            });
-
-            polygon.addListener("click", (event) => {
-                openInfoWindow(
-                    event.latLng,
-                    `
-        <strong>${escapeHtml(area.name)}</strong>
-        <br />
-        <span>${escapeHtml(area.label)}</span>
-      `,
-                );
-            });
-
-            state.attractionPolygons.push(polygon);
-
-            const attractionMarker = new window.google.maps.Marker({
-                position: area.center,
-                map: state.map,
-                title: area.name,
-                zIndex: 300,
-                icon: createGooglePinIcon({
-                    fillColor: area.color,
-                    text: "★",
-                    scale: 0.9,
-                }),
-            });
-
-            attractionMarker.addListener("click", () => {
-                openInfoWindow(
-                    area.center,
-                    `
-        <strong>${escapeHtml(area.name)}</strong>
-        <br />
-        <span>${escapeHtml(area.label)}</span>
-      `,
-                );
-            });
-
-            state.attractionMarkers.push(attractionMarker);
-        });
-
-        nearbyRestaurants.forEach((restaurant) => {
-            const marker = new window.google.maps.Marker({
-                position: restaurant.position,
-                map: state.map,
-                title: restaurant.name,
-                zIndex: 360,
-                icon: createGooglePinIcon({
-                    fillColor: "#2563eb",
-                    text: "R",
-                    scale: 0.78,
-                }),
-            });
-
-            marker.addListener("click", () => {
-                openInfoWindow(
-                    restaurant.position,
-                    `
-        <strong>${escapeHtml(restaurant.name)}</strong>
-        <br />
-        <span>${escapeHtml(restaurant.cuisine)}</span>
-        <br />
-        <span>Food Safety Score: ${restaurant.foodSafetyScore}/100</span>
-      `,
-                );
-            });
-
-            state.nearbyRestaurantMarkers.push(marker);
-        });
-    }
-
-    function clearAttractionLayer() {
-        state.attractionPolygons.forEach((polygon) => polygon.setMap(null));
-        state.attractionMarkers.forEach((marker) => marker.setMap(null));
-        state.nearbyRestaurantMarkers.forEach((marker) => marker.setMap(null));
-
-        state.attractionPolygons = [];
-        state.attractionMarkers = [];
-        state.nearbyRestaurantMarkers = [];
-    }
-
-    function openInfoWindow(position, content) {
-        if (!state.infoWindow) {
-            return;
-        }
-
-        state.infoWindow.setContent(`
-    <div class="map-info-window">
-      ${content}
-    </div>
-  `);
-
-        state.infoWindow.setPosition(position);
-        state.infoWindow.open(state.map);
-    }
     const { routes, recommendedSavedSpots } = window.SafeBiteData;
     const {
         createGoogleBadgeIcon,
@@ -128,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } = window.SafeBiteUtils;
 
     const state = {
-        mode: "solo",
         query: "",
         selectedRouteId: null,
         map: null,
@@ -136,7 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
         routeMarkers: [],
         segmentMarkers: [],
         routePolyline: null,
-        attractionPolygons: [],
+        directionsService: null,
+        directionsRenderer: null,
+        attractionCircles: [],
         attractionMarkers: [],
         nearbyRestaurantMarkers: [],
         infoWindow: null,
@@ -147,8 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
         search: document.querySelector("#destinationSearch"),
         routeCards: document.querySelector("#routeCards"),
         savedSpotsList: document.querySelector("#savedSpotsList"),
-        soloButton: document.querySelector("#soloModeButton"),
-        groupButton: document.querySelector("#groupModeButton"),
         mapElement: document.querySelector("#routesMap"),
         mapCallout: document.querySelector("#routeMapCallout"),
     };
@@ -157,84 +44,107 @@ document.addEventListener("DOMContentLoaded", () => {
         {
             id: "south-bank",
             name: "South Bank Parklands",
-            label: "Riverside dining and parkland area",
-            color: "#16a34a",
+            label: "Riverside parkland and casual dining area",
+            color: "#ef4444",
             center: { lat: -27.4787, lng: 153.0226 },
-            polygon: [
-                { lat: -27.4756, lng: 153.0154 },
-                { lat: -27.4824, lng: 153.0184 },
-                { lat: -27.4815, lng: 153.0264 },
-                { lat: -27.4754, lng: 153.0248 },
-            ],
+            radius: 650,
         },
         {
             id: "queen-street",
             name: "Queen Street Mall",
-            label: "CBD shopping and dining area",
-            color: "#f59e0b",
+            label: "CBD shopping and quick lunch area",
+            color: "#ef4444",
             center: { lat: -27.4698, lng: 153.0231 },
-            polygon: [
-                { lat: -27.4667, lng: 153.0212 },
-                { lat: -27.4717, lng: 153.0226 },
-                { lat: -27.472, lng: 153.024 },
-                { lat: -27.4664, lng: 153.0229 },
-            ],
+            radius: 420,
         },
         {
             id: "kangaroo-point",
             name: "Kangaroo Point Cliffs",
-            label: "River view, walking and lookout area",
-            color: "#0ea5e9",
+            label: "Lookout, riverside walk and dinner area",
+            color: "#facc15",
             center: { lat: -27.4773, lng: 153.0342 },
-            polygon: [
-                { lat: -27.4722, lng: 153.031 },
-                { lat: -27.4803, lng: 153.0342 },
-                { lat: -27.4807, lng: 153.0368 },
-                { lat: -27.4718, lng: 153.034 },
-            ],
+            radius: 560,
         },
         {
             id: "botanic-gardens",
             name: "City Botanic Gardens",
-            label: "Garden, riverside walk and nearby CBD dining",
-            color: "#84cc16",
+            label: "Garden walk with nearby CBD cafes",
+            color: "#22c55e",
             center: { lat: -27.475, lng: 153.03 },
-            polygon: [
-                { lat: -27.4713, lng: 153.0258 },
-                { lat: -27.4772, lng: 153.0286 },
-                { lat: -27.4754, lng: 153.0332 },
-                { lat: -27.4691, lng: 153.0312 },
-            ],
+            radius: 500,
         },
         {
             id: "story-bridge",
-            name: "Howard Smith Wharves / Story Bridge",
-            label: "Bridge view and riverside dining area",
-            color: "#a855f7",
+            name: "Howard Smith Wharves",
+            label: "Story Bridge view and riverside dining",
+            color: "#facc15",
             center: { lat: -27.4648, lng: 153.0348 },
-            polygon: [
-                { lat: -27.4628, lng: 153.0343 },
-                { lat: -27.4657, lng: 153.037 },
-                { lat: -27.4695, lng: 153.0351 },
-                { lat: -27.4673, lng: 153.0319 },
-            ],
+            radius: 460,
+        },
+        {
+            id: "fortitude-valley",
+            name: "Fortitude Valley",
+            label: "Night food, music and group dining area",
+            color: "#ef4444",
+            center: { lat: -27.4567, lng: 153.0348 },
+            radius: 620,
+        },
+        {
+            id: "new-farm",
+            name: "New Farm Park",
+            label: "Picnic, brunch and river walk area",
+            color: "#22c55e",
+            center: { lat: -27.4697, lng: 153.0516 },
+            radius: 580,
+        },
+        {
+            id: "west-end",
+            name: "West End",
+            label: "International food and student-friendly dining",
+            color: "#facc15",
+            center: { lat: -27.4807, lng: 153.0117 },
+            radius: 650,
+        },
+        {
+            id: "milton",
+            name: "Milton / Suncorp Stadium",
+            label: "Stadium food and casual group route area",
+            color: "#facc15",
+            center: { lat: -27.4661, lng: 153.0096 },
+            radius: 540,
+        },
+        {
+            id: "toowong",
+            name: "Toowong / St Lucia",
+            label: "Student dining and riverside travel area",
+            color: "#22c55e",
+            center: { lat: -27.4893, lng: 152.9916 },
+            radius: 700,
+        },
+        {
+            id: "woolloongabba",
+            name: "Woolloongabba",
+            label: "Gabba event dining and casual food area",
+            color: "#ef4444",
+            center: { lat: -27.485, lng: 153.0379 },
+            radius: 560,
         },
     ];
 
     const nearbyRestaurants = [
         {
             areaId: "south-bank",
-            name: "South Bank Riverside Dining",
-            cuisine: "Modern Australian",
+            name: "Riverside Noodle House",
+            cuisine: "Asian Fusion",
             foodSafetyScore: 94,
             position: { lat: -27.4789, lng: 153.0221 },
         },
         {
             areaId: "south-bank",
-            name: "Grey Street Food Spot",
-            cuisine: "Asian Fusion",
+            name: "Grey Street Dessert Bar",
+            cuisine: "Dessert",
             foodSafetyScore: 91,
-            position: { lat: -27.4799, lng: 153.0205 },
+            position: { lat: -27.4802, lng: 153.0207 },
         },
         {
             areaId: "queen-street",
@@ -242,6 +152,13 @@ document.addEventListener("DOMContentLoaded", () => {
             cuisine: "Cafe",
             foodSafetyScore: 88,
             position: { lat: -27.4696, lng: 153.0235 },
+        },
+        {
+            areaId: "queen-street",
+            name: "Mall Lunch Corner",
+            cuisine: "Modern Australian",
+            foodSafetyScore: 90,
+            position: { lat: -27.4706, lng: 153.0224 },
         },
         {
             areaId: "kangaroo-point",
@@ -259,12 +176,96 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             areaId: "story-bridge",
-            name: "Riverside Wharf Dining",
+            name: "Wharf Seafood Table",
             cuisine: "Seafood",
             foodSafetyScore: 93,
             position: { lat: -27.4646, lng: 153.0357 },
         },
+        {
+            areaId: "fortitude-valley",
+            name: "Valley Late Night Eats",
+            cuisine: "Korean",
+            foodSafetyScore: 89,
+            position: { lat: -27.4562, lng: 153.0343 },
+        },
+        {
+            areaId: "fortitude-valley",
+            name: "Brunswick Street Grill",
+            cuisine: "Grill",
+            foodSafetyScore: 87,
+            position: { lat: -27.4579, lng: 153.036 },
+        },
+        {
+            areaId: "new-farm",
+            name: "New Farm Brunch House",
+            cuisine: "Brunch",
+            foodSafetyScore: 95,
+            position: { lat: -27.4692, lng: 153.0507 },
+        },
+        {
+            areaId: "west-end",
+            name: "Boundary Street Dumplings",
+            cuisine: "Chinese",
+            foodSafetyScore: 90,
+            position: { lat: -27.4802, lng: 153.0112 },
+        },
+        {
+            areaId: "west-end",
+            name: "West End Vegan Bowl",
+            cuisine: "Vegetarian",
+            foodSafetyScore: 96,
+            position: { lat: -27.482, lng: 153.0108 },
+        },
+        {
+            areaId: "milton",
+            name: "Stadium Burger Stop",
+            cuisine: "Burger",
+            foodSafetyScore: 86,
+            position: { lat: -27.4658, lng: 153.009 },
+        },
+        {
+            areaId: "toowong",
+            name: "Student Bento Kitchen",
+            cuisine: "Japanese",
+            foodSafetyScore: 91,
+            position: { lat: -27.4898, lng: 152.9928 },
+        },
+        {
+            areaId: "woolloongabba",
+            name: "Gabba Match Day Meals",
+            cuisine: "Pub Food",
+            foodSafetyScore: 88,
+            position: { lat: -27.4854, lng: 153.0387 },
+        },
     ];
+
+    const demoRoutes = [
+        {
+            id: "demo-toowong-student-route",
+            mode: "solo",
+            name: "Toowong Student Dinner Route",
+            summaryLabel:
+                "Student-friendly route with simple food choices near Toowong and St Lucia.",
+            distanceKm: 2.3,
+            priceLevel: "$",
+            estimatedWalkingTime: "31 min walk",
+            foodSafetyScore: 91,
+            coordinates: [
+                { lat: -27.4898, lng: 152.9928 },
+                { lat: -27.4912, lng: 152.9941 },
+                { lat: -27.495, lng: 153.0012 },
+            ],
+            segmentTimes: ["10 min", "21 min"],
+            demoStops: [
+                { name: "Student Bento Kitchen", cuisine: "Japanese" },
+                { name: "Toowong Rice Bowl", cuisine: "Korean" },
+                { name: "St Lucia Cafe Stop", cuisine: "Cafe" },
+            ],
+        },
+        
+    ];
+
+    const allRoutes = [...routes, ...demoRoutes];
 
     initialize();
 
@@ -279,16 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function bindEvents() {
         refs.search.addEventListener("input", (event) => {
             state.query = event.currentTarget.value.trim().toLowerCase();
-            render();
-        });
-
-        refs.soloButton.addEventListener("click", () => {
-            state.mode = "solo";
-            render();
-        });
-
-        refs.groupButton.addEventListener("click", () => {
-            state.mode = "group";
             render();
         });
     }
@@ -332,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         state.map = new window.google.maps.Map(refs.mapElement, {
             center: { lat: -27.4748, lng: 153.024 },
-            zoom: 14.2,
+            zoom: 13.2,
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: false,
@@ -343,23 +334,48 @@ document.addEventListener("DOMContentLoaded", () => {
         state.routePolyline = new window.google.maps.Polyline({
             map: state.map,
             strokeColor: "#ef4444",
-            strokeOpacity: 0.94,
-            strokeWeight: 5,
+            strokeOpacity: 1,
+            strokeWeight: 6,
+            zIndex: 500,
+        });
+
+        state.directionsService = new window.google.maps.DirectionsService();
+
+        state.directionsRenderer = new window.google.maps.DirectionsRenderer({
+            map: state.map,
+            suppressMarkers: true,
+            preserveViewport: false,
+            polylineOptions: {
+                strokeColor: "#ef4444",
+                strokeOpacity: 1,
+                strokeWeight: 6,
+                zIndex: 500,
+            },
         });
 
         state.mapReady = true;
         state.infoWindow = new window.google.maps.InfoWindow();
         refs.mapCallout.hidden = false;
+
         drawAttractionLayer();
+    }
+
+    function getRouteStopsForRoute(route) {
+        if (Array.isArray(route.demoStops)) {
+            return route.demoStops;
+        }
+
+        return getRouteStops(route);
     }
 
     function getFilteredRoutes() {
         const query = state.query;
-        const modeRoutes = routes.filter((route) => route.mode === state.mode);
-        const filtered = modeRoutes.filter((route) => {
-            const stopNames = getRouteStops(route)
+
+        const filtered = allRoutes.filter((route) => {
+            const stopNames = getRouteStopsForRoute(route)
                 .map((stop) => `${stop.name} ${stop.cuisine}`.toLowerCase())
                 .join(" ");
+
             return (
                 query.length === 0 ||
                 route.name.toLowerCase().includes(query) ||
@@ -367,23 +383,17 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         });
 
-        if (state.mode === "solo") {
-            return filtered.sort((first, second) => {
-                if (second.foodSafetyScore !== first.foodSafetyScore) {
-                    return second.foodSafetyScore - first.foodSafetyScore;
-                }
-                return first.distanceKm - second.distanceKm;
-            });
-        }
+        return filtered.sort((first, second) => {
+            if (second.foodSafetyScore !== first.foodSafetyScore) {
+                return second.foodSafetyScore - first.foodSafetyScore;
+            }
 
-        return filtered.sort(
-            (first, second) => second.distanceKm - first.distanceKm,
-        );
+            return first.distanceKm - second.distanceKm;
+        });
     }
 
     function render() {
         state.visibleRoutes = getFilteredRoutes();
-        syncModeButtons();
 
         if (
             !state.visibleRoutes.some(
@@ -414,6 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (event.target.closest(".edit-button")) {
                     return;
                 }
+
                 state.selectedRouteId = card.dataset.routeId;
                 render();
             });
@@ -422,20 +433,28 @@ document.addEventListener("DOMContentLoaded", () => {
         refs.routeCards.querySelectorAll(".edit-button").forEach((button) => {
             button.addEventListener("click", (event) => {
                 event.stopPropagation();
+
                 const route = state.visibleRoutes.find(
                     (item) => item.id === button.dataset.routeId,
                 );
+
+                if (!route) {
+                    return;
+                }
+
                 localStorage.setItem(
                     "safeBiteSelectedRoute",
                     JSON.stringify({
                         id: route.id,
                         name: route.name,
                         mode: route.mode,
-                        stops: route.stops,
+                        stops: route.stops ?? getRouteStopsForRoute(route),
+                        coordinates: route.coordinates,
                         distanceKm: route.distanceKm,
                         estimatedWalkingTime: route.estimatedWalkingTime,
                     }),
                 );
+
                 window.location.href = "../diy-route-studio/index.html";
             });
         });
@@ -443,18 +462,12 @@ document.addEventListener("DOMContentLoaded", () => {
         drawSelectedRoute();
     }
 
-    function syncModeButtons() {
-        const isSolo = state.mode === "solo";
-        refs.soloButton.classList.toggle("is-active", isSolo);
-        refs.groupButton.classList.toggle("is-active", !isSolo);
-    }
-
     function renderRouteCard(route) {
         const isSelected = route.id === state.selectedRouteId;
         const progressWidth = Math.max(Math.min(route.foodSafetyScore, 100), 0);
-        const tagText =
-            state.mode === "solo" ? "Efficient for solo" : "Varied for groups";
-        const stopChips = getRouteStops(route)
+        const tagText = "Recommended route";
+
+        const stopChips = getRouteStopsForRoute(route)
             .map(
                 (stop) =>
                     `<span class="route-stop-chip">${escapeHtml(stop.name)}</span>`,
@@ -501,15 +514,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const route = getSelectedRoute();
         updateMapCallout(route);
 
-        if (!route || !state.mapReady || !state.map || !state.routePolyline) {
+        if (!route || !state.mapReady || !state.map) {
             return;
         }
 
         clearRouteMarkers();
 
         const positions = route.coordinates.map(toLatLng);
-        state.routePolyline.setPath(positions);
 
+        drawRouteMarkers(route, positions);
+        drawNavigationRoute(route, positions);
+    }
+
+    function drawRouteMarkers(route, positions) {
         positions.forEach((position, index) => {
             const marker = new window.google.maps.Marker({
                 position,
@@ -522,10 +539,106 @@ document.addEventListener("DOMContentLoaded", () => {
                     scale: 1,
                 }),
             });
+
             state.routeMarkers.push(marker);
         });
+    }
 
-        route.segmentTimes.forEach((label, index) => {
+    function drawNavigationRoute(route, positions) {
+        if (
+            !state.directionsService ||
+            !state.directionsRenderer ||
+            positions.length < 2
+        ) {
+            drawFallbackStraightRoute(route, positions);
+            return;
+        }
+
+        // First draw a visible fallback line, so the user never sees markers only.
+        drawFallbackStraightRoute(route, positions);
+
+        const request = {
+            origin: positions[0],
+            destination: positions[positions.length - 1],
+            waypoints: positions.slice(1, -1).map((position) => ({
+                location: position,
+                stopover: true,
+            })),
+            travelMode: window.google.maps.TravelMode.WALKING,
+            optimizeWaypoints: false,
+        };
+
+        const currentRouteId = route.id;
+
+        state.directionsService.route(request, (result, status) => {
+            console.log("Directions status:", route.name, status);
+
+            if (currentRouteId !== state.selectedRouteId) {
+                return;
+            }
+
+            if (status === "OK" && result) {
+                if (state.routePolyline) {
+                    state.routePolyline.setPath([]);
+                }
+
+                state.segmentMarkers.forEach((marker) => marker.setMap(null));
+                state.segmentMarkers = [];
+
+                state.directionsRenderer.setDirections(result);
+                drawSegmentBadgesFromDirections(result, route);
+                return;
+            }
+
+            // Keep fallback line when Google navigation fails.
+            console.warn(
+                `Navigation route failed for "${route.name}". Fallback line is kept.`,
+                status,
+            );
+        });
+    }
+
+    function drawSegmentBadgesFromDirections(result, route) {
+        const legs = result.routes?.[0]?.legs ?? [];
+
+        legs.forEach((leg, index) => {
+            const label =
+                leg.duration?.text ?? route.segmentTimes?.[index] ?? "";
+
+            if (!label) {
+                return;
+            }
+
+            const badge = new window.google.maps.Marker({
+                position: midpointBetween(leg.start_location, leg.end_location),
+                map: state.map,
+                clickable: false,
+                zIndex: 120,
+                icon: createGoogleBadgeIcon(label),
+            });
+
+            state.segmentMarkers.push(badge);
+        });
+    }
+
+    function drawFallbackStraightRoute(route, positions) {
+        if (state.routePolyline) {
+            state.routePolyline.setOptions({
+                strokeColor: "#b91c1c",
+                strokeOpacity: 1,
+                strokeWeight: 6,
+                zIndex: 500,
+            });
+            state.routePolyline.setPath(positions);
+        }
+
+        const segmentTimes = route.segmentTimes ?? [];
+
+        segmentTimes.forEach((label, index) => {
+            if (!positions[index] || !positions[index + 1]) {
+                return;
+            }
+
             const badge = new window.google.maps.Marker({
                 position: midpointBetween(
                     positions[index],
@@ -536,6 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 zIndex: 120,
                 icon: createGoogleBadgeIcon(label),
             });
+
             state.segmentMarkers.push(badge);
         });
 
@@ -545,10 +659,16 @@ document.addEventListener("DOMContentLoaded", () => {
     function clearRouteMarkers() {
         state.routeMarkers.forEach((marker) => marker.setMap(null));
         state.segmentMarkers.forEach((marker) => marker.setMap(null));
+
         state.routeMarkers = [];
         state.segmentMarkers = [];
+
         if (state.routePolyline) {
             state.routePolyline.setPath([]);
+        }
+
+        if (state.directionsRenderer) {
+            state.directionsRenderer.set("directions", null);
         }
     }
 
@@ -561,7 +681,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const stopNames = getRouteStops(route)
+        const stopNames = getRouteStopsForRoute(route)
             .map((stop) => stop.name)
             .join(" → ");
 
@@ -569,5 +689,123 @@ document.addEventListener("DOMContentLoaded", () => {
       <strong>${escapeHtml(route.name)}</strong>
       <span>${escapeHtml(stopNames)} · ${route.estimatedWalkingTime} · ${formatKm(route.distanceKm)}</span>
     `;
+    }
+
+    function drawAttractionLayer() {
+        if (!state.mapReady || !state.map) {
+            return;
+        }
+
+        clearAttractionLayer();
+
+        attractionAreas.forEach((area) => {
+            const circle = new window.google.maps.Circle({
+                map: state.map,
+                center: area.center,
+                radius: area.radius,
+                strokeColor: area.color,
+                strokeOpacity: 0,
+                strokeWeight: 0,
+                fillColor: area.color,
+                fillOpacity: 0.28,
+                zIndex: 40,
+            });
+
+            circle.addListener("click", (event) => {
+                openInfoWindow(
+                    event.latLng,
+                    `
+        <strong>${escapeHtml(area.name)}</strong>
+        <br />
+        <span>${escapeHtml(area.label)}</span>
+        <br />
+        <span>Approx. ${area.radius}m area</span>
+      `,
+                );
+            });
+
+            state.attractionCircles.push(circle);
+
+            const attractionMarker = new window.google.maps.Marker({
+                position: area.center,
+                map: state.map,
+                title: area.name,
+                zIndex: 300,
+                icon: createGooglePinIcon({
+                    fillColor: area.color,
+                    text: "★",
+                    scale: 0.9,
+                }),
+            });
+
+            attractionMarker.addListener("click", () => {
+                openInfoWindow(
+                    area.center,
+                    `
+        <strong>${escapeHtml(area.name)}</strong>
+        <br />
+        <span>${escapeHtml(area.label)}</span>
+        <br />
+        <span>Approx. ${area.radius}m area</span>
+      `,
+                );
+            });
+
+            state.attractionMarkers.push(attractionMarker);
+        });
+
+        nearbyRestaurants.forEach((restaurant) => {
+            const marker = new window.google.maps.Marker({
+                position: restaurant.position,
+                map: state.map,
+                title: restaurant.name,
+                zIndex: 360,
+                icon: createGooglePinIcon({
+                    fillColor: "#2563eb",
+                    text: "R",
+                    scale: 0.78,
+                }),
+            });
+
+            marker.addListener("click", () => {
+                openInfoWindow(
+                    restaurant.position,
+                    `
+        <strong>${escapeHtml(restaurant.name)}</strong>
+        <br />
+        <span>${escapeHtml(restaurant.cuisine)}</span>
+        <br />
+        <span>Food Safety Score: ${restaurant.foodSafetyScore}/100</span>
+      `,
+                );
+            });
+
+            state.nearbyRestaurantMarkers.push(marker);
+        });
+    }
+
+    function clearAttractionLayer() {
+        state.attractionCircles.forEach((circle) => circle.setMap(null));
+        state.attractionMarkers.forEach((marker) => marker.setMap(null));
+        state.nearbyRestaurantMarkers.forEach((marker) => marker.setMap(null));
+
+        state.attractionCircles = [];
+        state.attractionMarkers = [];
+        state.nearbyRestaurantMarkers = [];
+    }
+
+    function openInfoWindow(position, content) {
+        if (!state.infoWindow) {
+            return;
+        }
+
+        state.infoWindow.setContent(`
+    <div class="map-info-window">
+      ${content}
+    </div>
+  `);
+
+        state.infoWindow.setPosition(position);
+        state.infoWindow.open(state.map);
     }
 });

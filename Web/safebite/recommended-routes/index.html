@@ -91,29 +91,6 @@
 
             <main class="routes-layout">
                 <aside class="routes-panel">
-                    <section class="panel-section">
-                        <p class="section-label">Travel Mode</p>
-                        <div
-                            class="mode-toggle"
-                            role="group"
-                            aria-label="Travel mode"
-                        >
-                            <button
-                                id="soloModeButton"
-                                class="mode-button is-active"
-                                type="button"
-                            >
-                                Solo Mode
-                            </button>
-                            <button
-                                id="groupModeButton"
-                                class="mode-button"
-                                type="button"
-                            >
-                                Group Mode
-                            </button>
-                        </div>
-                    </section>
 
                     <section class="panel-section">
                         <p class="section-label">Saved Spots</p>
@@ -121,7 +98,7 @@
                     </section>
 
                     <section class="panel-section panel-section--routes">
-                        <p class="section-label">Recommended Routes</p>
+                        <p class="section-label">All Recommended Routes</p>
                         <div
                             id="routeCards"
                             class="route-cards"
@@ -134,18 +111,36 @@
                     <div id="routeMapCallout" class="map-callout"></div>
 
                     <div class="map-legend" aria-label="Map legend">
-                        <span
-                            ><i class="legend-swatch legend-swatch--area"></i
-                            >Attraction area</span
-                        >
-                        <span
-                            ><i class="legend-swatch legend-swatch--route"></i
-                            >Selected route restaurants</span
-                        >
-                        <span
-                            ><i class="legend-swatch legend-swatch--nearby"></i
-                            >Nearby restaurants</span
-                        >
+                        <strong class="map-legend__title">Map Legend</strong>
+
+                        <div class="legend-popularity">
+                            <span
+                                ><i class="legend-swatch legend-swatch--low"></i
+                                >Low popularity</span
+                            >
+                            <span
+                                ><i
+                                    class="legend-swatch legend-swatch--medium"
+                                ></i
+                                >Medium popularity</span
+                            >
+                            <span
+                                ><i
+                                    class="legend-swatch legend-swatch--high"
+                                ></i
+                                >High popularity</span
+                            >
+                        </div>
+
+                        <span>
+                            <i class="legend-pin legend-pin--route">A</i>
+                            Selected route restaurants
+                        </span>
+
+                        <span>
+                            <i class="legend-pin legend-pin--nearby">R</i>
+                            Nearby restaurants in attraction areas
+                        </span>
                     </div>
 
                     <div id="routesMap" class="map-canvas"></div>
