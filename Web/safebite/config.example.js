@@ -2,4 +2,4 @@
 // ⚠️ 警告：请勿在此文件中填写真实的 API Key！
 // ==========================================
 
-const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY_HERE";
+window.GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY_HERE";

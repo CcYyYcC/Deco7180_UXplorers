@@ -39,6 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
     resultsCount: document.querySelector("#resultsCount"),
     mapElement: document.querySelector("#discoveryMap"),
     mapPreview: document.querySelector("#mapPreview"),
+    layout: document.querySelector("#discoveryLayout"),
+    sidebarToggle: document.querySelector("#sidebarToggle"),
+    sidebarExpandToggle: document.querySelector("#sidebarExpandToggle"),
+    sidebarToggleLabel: document.querySelector(".sidebar-toggle__label"),
     openFilterButton: document.querySelector("#openFilterButton"),
     closeFilterButton: document.querySelector("#closeFilterButton"),
     applyFiltersButton: document.querySelector("#applyFiltersButton"),
@@ -74,6 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     refs.openFilterButton.addEventListener("click", openDrawer);
+    refs.sidebarToggle.addEventListener("click", toggleSidebar);
+    refs.sidebarExpandToggle.addEventListener("click", toggleSidebar);
     refs.closeFilterButton.addEventListener("click", closeDrawer);
     refs.overlay.addEventListener("click", closeDrawer);
     refs.applyFiltersButton.addEventListener("click", closeDrawer);
@@ -262,6 +268,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const isSelected = restaurant.id === state.selectedRestaurantId;
     const safetyLabel = getSafetyLabel(restaurant.safetyScore);
     const openStatus = restaurant.openNow ? "Open Now" : "Lunch Spot";
+    const safetyStars = Array.from({ length: 5 }, (_, index) =>
+      index < Math.round(restaurant.safetyScore)
+        ? '<span class="food-safety-star is-filled">★</span>'
+        : '<span class="food-safety-star">★</span>'
+    ).join("");
 
     return `
       <article
@@ -297,9 +308,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="food-safety-banner">
             <span class="food-safety-banner__label">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm0 5a3 3 0 1 1 0 6a3 3 0 0 1 0-6Zm0 10.2a8.6 8.6 0 0 1-3.6-3.2c.6-1.2 1.9-2 3.6-2s3 .8 3.6 2A8.6 8.6 0 0 1 12 17.2Z"/></svg>
-              ${escapeHtml(safetyLabel)}
+              ${escapeHtml(safetyLabel)} Food Safety
             </span>
-            <span class="food-safety-banner__score">${restaurant.safetyPercent}% · ${restaurant.safetyGrade}</span>
+            <span class="food-safety-banner__stars" aria-label="${restaurant.safetyScore.toFixed(1)} out of 5 food safety rating">
+              ${safetyStars}
+            </span>
           </div>
           <div class="location-line">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 6 12.2 6.3 12.6a1 1 0 0 0 1.4 0C13 21.2 19 14.2 19 9a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z"/></svg>
@@ -405,6 +418,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeCard = refs.restaurantList.querySelector(`[data-restaurant-id="${state.selectedRestaurantId}"]`);
     if (activeCard) {
       activeCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  function toggleSidebar() {
+    const isCollapsed = refs.layout.classList.toggle("is-sidebar-collapsed");
+    refs.sidebarToggle.setAttribute("aria-expanded", String(!isCollapsed));
+    refs.sidebarToggle.setAttribute(
+      "aria-label",
+      isCollapsed ? "Expand restaurant list" : "Collapse restaurant list"
+    );
+    refs.sidebarToggle.title = isCollapsed ? "Expand restaurant list" : "Collapse restaurant list";
+    refs.sidebarToggleLabel.textContent = isCollapsed ? "Expand" : "Collapse";
+    refs.sidebarExpandToggle.setAttribute("aria-expanded", String(!isCollapsed));
+
+    if (state.mapReady && state.map) {
+      window.setTimeout(() => {
+        window.google.maps.event.trigger(state.map, "resize");
+        focusSelectedOnMap(false);
+      }, 260);
     }
   }
 

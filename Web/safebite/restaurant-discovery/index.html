@@ -71,10 +71,41 @@
         </div>
       </header>
 
-      <main class="discovery-layout">
-        <aside class="restaurant-panel" aria-label="Restaurant results panel">
-          <p id="resultsCount" class="results-count">10 restaurants found</p>
-          <section id="restaurantList" class="restaurant-list" aria-live="polite"></section>
+      <main id="discoveryLayout" class="discovery-layout">
+        <aside id="restaurantPanel" class="restaurant-panel" aria-label="Restaurant results panel">
+          <button
+            id="sidebarExpandToggle"
+            class="sidebar-toggle sidebar-toggle--collapsed"
+            type="button"
+            aria-label="Expand restaurant list"
+            aria-controls="restaurantPanel"
+            aria-expanded="false"
+            title="Expand restaurant list"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15.4 5 8.4 12l7 7 1.4-1.4L11.2 12l5.6-5.6L15.4 5Z" />
+            </svg>
+          </button>
+          <div class="restaurant-panel__content">
+            <div class="restaurant-panel__header">
+              <p id="resultsCount" class="results-count">10 restaurants found</p>
+              <button
+                id="sidebarToggle"
+                class="sidebar-toggle"
+                type="button"
+                aria-label="Collapse restaurant list"
+                aria-controls="restaurantPanel"
+                aria-expanded="true"
+                title="Collapse restaurant list"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M15.4 5 8.4 12l7 7 1.4-1.4L11.2 12l5.6-5.6L15.4 5Z" />
+                </svg>
+                <span class="sidebar-toggle__label">Collapse</span>
+              </button>
+            </div>
+            <section id="restaurantList" class="restaurant-list" aria-live="polite"></section>
+          </div>
         </aside>
 
         <section class="map-panel" aria-label="Map panel">

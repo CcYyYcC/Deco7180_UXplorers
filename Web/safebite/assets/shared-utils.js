@@ -3,24 +3,52 @@
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-  const getSafetyTone = (score) => {
-    if (score >= 4.5) {
+  const normalizeEatSafeRating = (value) => {
+    if (typeof value !== "number" || Number.isNaN(value)) {
+      return 3;
+    }
+    return clamp(Math.round(value), 3, 5);
+  };
+
+  const getEatSafeRating = (restaurant) => {
+    if (!restaurant) {
+      return 3;
+    }
+    if (typeof restaurant.eatSafeRating === "number") {
+      return normalizeEatSafeRating(restaurant.eatSafeRating);
+    }
+    return normalizeEatSafeRating(restaurant.safetyScore);
+  };
+
+  const getEatSafeSmileySrc = (rating) =>
+    `../assets/images/eat-safe-rating-${normalizeEatSafeRating(rating)}.png`;
+
+  const getSafetyTone = (restaurantOrRating) => {
+    const rating =
+      typeof restaurantOrRating === "object" && restaurantOrRating !== null
+        ? getEatSafeRating(restaurantOrRating)
+        : normalizeEatSafeRating(restaurantOrRating);
+    if (rating >= 5) {
       return "success";
     }
-    if (score >= 4.0) {
+    if (rating >= 4) {
       return "warning";
     }
     return "danger";
   };
 
-  const getSafetyLabel = (score) => {
-    if (score >= 4.6) {
-      return "Excellent Food Safety";
+  const getSafetyLabel = (restaurantOrRating) => {
+    const rating =
+      typeof restaurantOrRating === "object" && restaurantOrRating !== null
+        ? getEatSafeRating(restaurantOrRating)
+        : normalizeEatSafeRating(restaurantOrRating);
+    if (rating === 5) {
+      return "Eat Safe 5";
     }
-    if (score >= 4.2) {
-      return "Trusted Food Safety";
+    if (rating === 4) {
+      return "Eat Safe 4";
     }
-    return "Safety Needs Attention";
+    return "Eat Safe 3";
   };
 
   const formatMiles = (distance) => `${distance.toFixed(1)} mi`;
@@ -85,6 +113,15 @@
       return map[character];
     });
 
+  const formatEatSafeSmileyHtml = (restaurant, options = {}) => {
+    const rating = getEatSafeRating(restaurant);
+    const size = options.size ?? 40;
+    const className = options.className ?? "eat-safe-smiley";
+    const src = getEatSafeSmileySrc(rating);
+    const title = `Eat Safe rating ${rating} of 5`;
+    return `<img class="${escapeHtml(className)}" src="${escapeHtml(src)}" width="${size}" height="${size}" alt="${escapeHtml(title)}" title="${escapeHtml(title)}" loading="lazy" />`;
+  };
+
   const calculateItinerarySummary = (restaurantIds) => {
     const stops = restaurantIds.map((restaurantId) => getRestaurantById(restaurantId)).filter(Boolean);
     const totalDistance = stops.reduce((distance, stop, index) => {
@@ -139,7 +176,7 @@
     return [...restaurants].sort((first, second) => {
       const scoreRestaurant = (restaurant) => {
         const ratingScore = restaurant.rating / 5;
-        const safetyScore = restaurant.safetyScore / 5;
+        const safetyScore = getEatSafeRating(restaurant) / 5;
         const distanceScore = 1 - Math.min(restaurant.distance / 10, 1);
         const priceScore = 1 - (priceToValue(restaurant.priceLevel) - 1) / 3;
         const safetyWeight = 0.18 + normalizedPriority * 0.42;
@@ -289,6 +326,9 @@
     formatDurationClock,
     formatKm,
     formatMiles,
+    formatEatSafeSmileyHtml,
+    getEatSafeRating,
+    getEatSafeSmileySrc,
     getPriorityDescription,
     getPriorityLabel,
     getRestaurantById,
