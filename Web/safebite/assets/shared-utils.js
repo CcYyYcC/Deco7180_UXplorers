@@ -246,6 +246,9 @@
     scale = 1,
     textColor = "#ffffff",
     borderColor = "#ffffff",
+    borderWidth = 3,
+    innerBorderColor = "",
+    innerBorderWidth = 0,
     shadowColor = "rgba(15,23,42,0.18)",
   }) => {
     const width = 44 * scale;
@@ -261,7 +264,12 @@
           </filter>
         </defs>
         <g filter="url(#shadow)">
-          <path d="M22 1.5C11.5 1.5 3 9.7 3 19.9c0 14.6 16.9 29.4 18.2 30.5a1.2 1.2 0 0 0 1.6 0C24.1 49.3 41 34.5 41 19.9 41 9.7 32.5 1.5 22 1.5Z" fill="${fillColor}" stroke="${borderColor}" stroke-width="3"/>
+          <path d="M22 1.5C11.5 1.5 3 9.7 3 19.9c0 14.6 16.9 29.4 18.2 30.5a1.2 1.2 0 0 0 1.6 0C24.1 49.3 41 34.5 41 19.9 41 9.7 32.5 1.5 22 1.5Z" fill="${fillColor}" stroke="${borderColor}" stroke-width="${borderWidth}"/>
+          ${
+            innerBorderWidth > 0
+              ? `<path d="M22 1.5C11.5 1.5 3 9.7 3 19.9c0 14.6 16.9 29.4 18.2 30.5a1.2 1.2 0 0 0 1.6 0C24.1 49.3 41 34.5 41 19.9 41 9.7 32.5 1.5 22 1.5Z" fill="none" stroke="${innerBorderColor}" stroke-width="${innerBorderWidth}"/>`
+              : ""
+          }
           <text x="22" y="22" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="800" fill="${textColor}">${labelText}</text>
         </g>
       </svg>

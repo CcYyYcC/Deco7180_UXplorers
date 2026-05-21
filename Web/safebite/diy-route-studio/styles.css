@@ -93,35 +93,40 @@ input {
     top: 0;
     z-index: 20;
     margin-bottom: 6px;
-    padding: 18px 26px;
-    border-bottom: 1px solid rgba(24, 26, 26, 0.08);
-    background: rgba(255, 251, 242, 0.94);
+    padding: 18px 26px 14px;
+    border-bottom: 1px solid rgba(219, 200, 162, 0.38);
+    background: rgba(255, 250, 240, 0.96);
     backdrop-filter: blur(10px);
-    box-shadow: 0 10px 24px rgba(24, 26, 26, 0.06);
+    box-shadow: none;
 }
 
 .top-nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
     justify-content: center;
+    gap: 28px;
 }
 .nav-tab {
     position: relative;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    padding: 10px 8px;
+    padding: 10px 0 12px;
+    border-radius: 0;
+    border: 0;
+    background: transparent;
     color: #3b362b;
     text-decoration: none;
-    transition: color 180ms ease;
+    font-size: 0.98rem;
+    font-weight: 500;
+    box-shadow: none;
 }
 .nav-tab::after {
     content: "";
     position: absolute;
     left: 0;
     right: 0;
-    bottom: -6px;
+    bottom: 0;
     height: 2px;
     background: transparent;
     transform: scaleX(0.4);
@@ -129,13 +134,31 @@ input {
         background-color 180ms ease,
         transform 180ms ease;
 }
+.nav-tab:hover,
+.nav-tab:focus-visible {
+    transform: none;
+    box-shadow: none;
+}
 .nav-tab:hover::after,
+.nav-tab:focus-visible::after,
 .nav-tab.is-active::after {
     background: var(--color-primary);
     transform: scaleX(1);
 }
 .nav-tab.is-active {
+    background: transparent;
     color: var(--color-text);
+}
+.nav-tab__icon {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+}
+.nav-tab__icon svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    flex: 0 0 auto;
 }
 
 .heading-row h1 {

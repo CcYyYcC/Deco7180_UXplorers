@@ -1,4 +1,7 @@
-const GOOGLE_MAPS_API_KEY = "AIzaSyDVCI10u73uO-IuoqOKZlq3zgSXcr7g3U0";
+const GOOGLE_MAPS_API_KEY =
+    typeof window !== "undefined" && typeof window.GOOGLE_MAPS_API_KEY === "string"
+        ? window.GOOGLE_MAPS_API_KEY.trim()
+        : "";
 
 document.addEventListener("DOMContentLoaded", () => {
     const { routes, recommendedSavedSpots } = window.SafeBiteData;
@@ -300,7 +303,8 @@ document.addEventListener("DOMContentLoaded", () => {
     async function initializeMap() {
         if (
             !GOOGLE_MAPS_API_KEY ||
-            GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY"
+            GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY" ||
+            GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY_HERE"
         ) {
             refs.mapCallout.hidden = true;
             createMapFallback(

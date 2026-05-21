@@ -4,51 +4,41 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SafeBite | Homepage</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=nav3" />
     <script defer src="../assets/shared-data.js"></script>
     <script defer src="../assets/shared-utils.js"></script>
     <script defer src="./script.js"></script>
   </head>
   <body>
     <div class="page-shell">
-      <header class="site-header">
-        <div class="site-header__top">
-          <a class="brand-mark" href="../homepage/index.html" aria-label="SafeBite homepage">
-            <span class="brand-mark__badge">SB</span>
-            <span class="brand-mark__text">
-              <strong>SafeBite</strong>
-              <small>Brisbane Dining Guide</small>
+      <header class="page-header">
+        <nav class="top-nav" aria-label="Primary">
+          <a class="nav-tab is-active" href="../homepage/index.html" aria-current="page">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 4.2 4 10v9h5.5v-5.5h5V19H20v-9l-8-5.8Zm0-2.5 10 7.2V21h-9.5v-5.5h-1V21H2V8.9l10-7.2Z"/></svg>
             </span>
+            Home
           </a>
-
-          <nav class="top-nav top-nav--desktop" aria-label="Primary">
-            <a class="nav-tab is-active" href="../homepage/index.html" aria-current="page">Home</a>
-            <a class="nav-tab" href="../restaurant-discovery/index.html">Restaurants</a>
-            <a class="nav-tab" href="../recommended-routes/index.html">Routes</a>
-            <a class="nav-tab" href="../diy-route-studio/index.html">DIY Studio</a>
-          </nav>
-
-          <div class="header-actions">
-            <button class="icon-pill" type="button" aria-label="User account">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4 0-7 2-7 4.5V20h14v-1.5C19 16 16 14 12 14Z"/></svg>
-            </button>
-            <button id="menuToggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="siteDrawer" aria-label="Open site menu">
-              <span></span><span></span><span></span>
-            </button>
-          </div>
-        </div>
+          <a class="nav-tab" href="../restaurant-discovery/index.html">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 4.7 12.2l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10a5 5 0 0 1 0-10Z"/></svg>
+            </span>
+            Restaurants
+          </a>
+          <a class="nav-tab" href="../recommended-routes/index.html">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m13 3 1.8 4.2L19 9l-4.2 1.8L13 15l-1.8-4.2L7 9l4.2-1.8L13 3Zm-8 8 1.2 2.8L9 15l-2.8 1.2L5 19l-1.2-2.8L1 15l2.8-1.2L5 11Zm13 4 1 2.2L21 18l-2 0.8L18 21l-1-2.2L15 18l2-0.8 1-2.2Z"/></svg>
+            </span>
+            Routes
+          </a>
+          <a class="nav-tab" href="../diy-route-studio/index.html">
+            <span class="nav-tab__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 5a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 5Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2ZM7 15a3 3 0 1 1 2.8 4H14a3 3 0 1 1 0 2H9.8A3 3 0 1 1 7 15Zm0 2a1 1 0 1 0 0 2a1 1 0 0 0 0-2Zm10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2Z"/></svg>
+            </span>
+            DIY Studio
+          </a>
+        </nav>
       </header>
-
-      <aside id="siteDrawer" class="site-drawer" hidden>
-        <div class="site-drawer__content">
-          <h2>Explore SafeBite</h2>
-          <a href="../homepage/index.html">Homepage</a>
-          <a href="../restaurant-discovery/index.html">Restaurant Discovery</a>
-          <a href="../recommended-routes/index.html">Recommended Routes</a>
-          <a href="../diy-route-studio/index.html">DIY Route Studio</a>
-        </div>
-      </aside>
-      <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
 
       <main class="homepage-main">
         <section class="hero-stage">
@@ -77,7 +67,7 @@
           </div>
 
           <div class="hero-stage__visual">
-            <img src="../assets/images/restaurant-1.jpg" alt="Curated SafeBite restaurant feature" />
+            <img src="../assets/images/pixabay-restaurant-646678_1280.jpg" alt="Curated SafeBite restaurant feature" />
             <div class="hero-stage__caption">
               <span class="mini-pill">Brisbane spotlight</span>
               <h2>Fine dining picks, local routes, and traveler-first planning.</h2>
@@ -128,7 +118,7 @@
               <a class="button button--secondary" href="../recommended-routes/index.html">Open all routes</a>
             </div>
             <div class="curated-section__visual">
-              <img src="../assets/images/restaurant-4.jpg" alt="Chef preparing a curated meal" />
+              <img src="../assets/images/pixabay-interior-2305694_640.jpg" alt="Chef preparing a curated meal" />
               <div class="visual-note">
                 <strong>Simple, polished, useful</strong>
                 <span>Editorial in tone, direct in navigation.</span>

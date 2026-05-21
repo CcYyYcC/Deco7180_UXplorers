@@ -1,4 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const GOOGLE_MAPS_API_KEY =
+        typeof window !== "undefined" && typeof window.GOOGLE_MAPS_API_KEY === "string"
+            ? window.GOOGLE_MAPS_API_KEY.trim()
+            : "";
     const localWishlist = JSON.parse(localStorage.getItem("safeBiteUserWishlist"));
     const initialWishlistIds = localWishlist || [...window.SafeBiteData.diyWishlist];
 
@@ -151,7 +155,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function initializeMap() {
-        if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY.includes("YOUR_API")) return;
+        if (
+            !GOOGLE_MAPS_API_KEY ||
+            GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY" ||
+            GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+        ) return;
         await loadGoogleMapsApi(GOOGLE_MAPS_API_KEY);
         state.map = new window.google.maps.Map(refs.mapElement, {
             center: { lat: -27.476, lng: 153.024 },

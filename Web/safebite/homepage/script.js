@@ -7,9 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const refs = {
-    menuToggle: document.querySelector("#menuToggle"),
-    siteDrawer: document.querySelector("#siteDrawer"),
-    drawerBackdrop: document.querySelector("#drawerBackdrop"),
     searchForm: document.querySelector("#homeSearchForm"),
     searchInput: document.querySelector("#homeSearchInput"),
     featuredRestaurants: document.querySelector("#featuredRestaurants"),
@@ -24,15 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function bindEvents() {
-    refs.menuToggle.addEventListener("click", toggleDrawer);
-    refs.drawerBackdrop.addEventListener("click", closeDrawer);
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closeDrawer();
-      }
-    });
-
     refs.searchInput.addEventListener("input", (event) => {
       state.query = event.currentTarget.value.trim().toLowerCase();
       render();
@@ -45,23 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = `../restaurant-discovery/index.html`;
       }
     });
-  }
-
-  function toggleDrawer() {
-    const isOpen = !refs.siteDrawer.hidden;
-    if (isOpen) {
-      closeDrawer();
-      return;
-    }
-    refs.siteDrawer.hidden = false;
-    refs.drawerBackdrop.hidden = false;
-    refs.menuToggle.setAttribute("aria-expanded", "true");
-  }
-
-  function closeDrawer() {
-    refs.siteDrawer.hidden = true;
-    refs.drawerBackdrop.hidden = true;
-    refs.menuToggle.setAttribute("aria-expanded", "false");
   }
 
   function getFilteredRestaurants() {
@@ -130,6 +101,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderRoutes() {
     const items = getFilteredRoutes();
+    const routeImages = [
+      "../assets/images/pixabay-interior-2305694_640.jpg",
+      "../assets/images/pixabay-wine-8346641_640.jpg",
+      "../assets/images/pexels-outdoor-dining-1846137.jpg",
+    ];
+
     if (!items.length) {
       refs.featuredRoutes.innerHTML = `
         <div class="search-empty">No featured routes match that search. Try another keyword.</div>
@@ -138,14 +115,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     refs.featuredRoutes.innerHTML = items
-      .map((route) => {
+      .map((route, index) => {
         const stopNames = getRouteStops(route)
           .map((stop) => stop.name)
           .join(" → ");
+        const image = routeImages[index % routeImages.length];
 
         return `
           <article class="content-card">
-            <img src="../assets/images/restaurant-3.jpg" alt="${escapeHtml(route.name)} route preview" />
+            <img src="${image}" alt="${escapeHtml(route.name)} route preview" />
             <div class="content-card__body">
               <span class="content-card__meta">${route.estimatedWalkingTime} · ${route.priceLevel}</span>
               <h3>${escapeHtml(route.name)}</h3>

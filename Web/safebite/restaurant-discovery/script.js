@@ -1,4 +1,7 @@
-const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
+const GOOGLE_MAPS_API_KEY =
+  typeof window !== "undefined" && typeof window.GOOGLE_MAPS_API_KEY === "string"
+    ? window.GOOGLE_MAPS_API_KEY.trim()
+    : "";
 
 document.addEventListener("DOMContentLoaded", () => {
   const { restaurants } = window.SafeBiteData;
@@ -7,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     createMapFallback,
     escapeHtml,
     formatMiles,
+    getEatSafeRating,
     getPriorityDescription,
     getPriorityLabel,
     getSafetyLabel,
@@ -151,7 +155,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function initializeMap() {
-    if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY") {
+    if (
+      !GOOGLE_MAPS_API_KEY ||
+      GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY" ||
+      GOOGLE_MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+    ) {
       createMapFallback(
         refs.mapElement,
         "Map preview requires a Google Maps API key. Add it near the top of restaurant-discovery/script.js."
@@ -264,12 +272,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function renderRestaurantCard(restaurant) {
+  function renderRestaurantCard(restaurant, index) {
     const isSelected = restaurant.id === state.selectedRestaurantId;
-    const safetyLabel = getSafetyLabel(restaurant.safetyScore);
+    const eatSafeRating = getEatSafeRating(restaurant);
+    const safetyLabel = getSafetyLabel(eatSafeRating);
     const openStatus = restaurant.openNow ? "Open Now" : "Lunch Spot";
     const safetyStars = Array.from({ length: 5 }, (_, index) =>
-      index < Math.round(restaurant.safetyScore)
+      index < eatSafeRating
         ? '<span class="food-safety-star is-filled">★</span>'
         : '<span class="food-safety-star">★</span>'
     ).join("");
@@ -282,9 +291,14 @@ document.addEventListener("DOMContentLoaded", () => {
         aria-label="${escapeHtml(restaurant.name)}"
       >
         <div class="restaurant-card__media">
-          <img src="${restaurant.image}" alt="${escapeHtml(restaurant.name)} dining area" />
+          <img
+            src="${restaurant.image}"
+            alt="${escapeHtml(restaurant.name)} dining area"
+            loading="${index === 0 ? "eager" : "lazy"}"
+            fetchpriority="${index === 0 ? "high" : "auto"}"
+            decoding="async"
+          />
           <span class="overlay-badge overlay-badge--open">${openStatus}</span>
-          <span class="overlay-badge overlay-badge--safety">${restaurant.safetyScore.toFixed(1)}</span>
         </div>
         <div class="restaurant-card__body">
           <div class="title-row">
@@ -310,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm0 5a3 3 0 1 1 0 6a3 3 0 0 1 0-6Zm0 10.2a8.6 8.6 0 0 1-3.6-3.2c.6-1.2 1.9-2 3.6-2s3 .8 3.6 2A8.6 8.6 0 0 1 12 17.2Z"/></svg>
               ${escapeHtml(safetyLabel)} Food Safety
             </span>
-            <span class="food-safety-banner__stars" aria-label="${restaurant.safetyScore.toFixed(1)} out of 5 food safety rating">
+            <span class="food-safety-banner__stars" aria-label="${eatSafeRating} out of 5 food safety rating">
               ${safetyStars}
             </span>
           </div>
@@ -349,7 +363,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <span>${escapeHtml(restaurant.cuisine)}</span>
         </div>
         <div class="preview-row">
-          <span>Safety: ${restaurant.safetyScore.toFixed(1)}/5.0</span>
+          <span>Safety: ${escapeHtml(getSafetyLabel(getEatSafeRating(restaurant)))}</span>
         </div>
         <p class="preview-address">${escapeHtml(restaurant.address)}</p>
       </div>
@@ -364,7 +378,8 @@ document.addEventListener("DOMContentLoaded", () => {
     clearMarkers();
 
     state.currentRestaurants.forEach((restaurant) => {
-      const tone = getSafetyTone(restaurant.safetyScore);
+      const eatSafeRating = getEatSafeRating(restaurant);
+      const tone = getSafetyTone(eatSafeRating);
       const colorMap = {
         success: "#22c55e",
         warning: "#facc15",
@@ -376,12 +391,17 @@ document.addEventListener("DOMContentLoaded", () => {
         position: toLatLng(restaurant.coordinates),
         map: state.map,
         title: restaurant.name,
-        zIndex: isSelected ? 500 : 200,
+        zIndex: isSelected ? 900 : 200,
         icon: createGooglePinIcon({
           fillColor: colorMap[tone],
-          text: restaurant.safetyScore.toFixed(1),
-          textColor,
-          scale: isSelected ? 1.12 : 1,
+          text: String(eatSafeRating),
+          textColor: isSelected ? "#111111" : textColor,
+          scale: isSelected ? 1.34 : 1,
+          borderColor: isSelected ? "#111111" : "#ffffff",
+          borderWidth: isSelected ? 7 : 3,
+          innerBorderColor: isSelected ? "#ffffff" : "",
+          innerBorderWidth: isSelected ? 2.5 : 0,
+          shadowColor: isSelected ? "rgba(0,0,0,0)" : "rgba(15,23,42,0.18)",
         }),
       });
 
@@ -443,6 +463,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function openDrawer() {
     refs.drawer.hidden = false;
     refs.overlay.hidden = false;
+    document.body.classList.add("is-filter-open");
     requestAnimationFrame(() => {
       refs.drawer.classList.add("is-open");
       refs.overlay.classList.add("is-visible");
@@ -462,6 +483,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.setTimeout(() => {
       refs.drawer.hidden = true;
       refs.overlay.hidden = true;
+      document.body.classList.remove("is-filter-open");
     }, 240);
   }
 });
