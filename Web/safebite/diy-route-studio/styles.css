@@ -89,8 +89,8 @@ input {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    position: sticky;
-    top: 0;
+    position: relative;
+    top: auto;
     z-index: 20;
     margin-bottom: 6px;
     padding: 18px 26px 14px;

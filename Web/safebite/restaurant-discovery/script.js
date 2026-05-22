@@ -56,7 +56,29 @@ document.addEventListener("DOMContentLoaded", () => {
     prioritySlider: document.querySelector("#safetyPriority"),
     priorityBadge: document.querySelector("#priorityBadge"),
     priorityDescription: document.querySelector("#priorityDescription"),
+    restaurantModal: document.querySelector("#restaurantModal"),
+    restaurantModalOverlay: document.querySelector("#restaurantModalOverlay"),
+    restaurantModalContent: document.querySelector("#restaurantModalContent"),
+    closeRestaurantModal: document.querySelector("#closeRestaurantModal"),
   };
+
+  const reviewSamples = [
+    {
+      name: "Mia",
+      rating: 5,
+      text: "Clear menu information and a spotless dining room. Staff were confident answering food safety questions.",
+    },
+    {
+      name: "Thomas",
+      rating: 4,
+      text: "Good service and reliable timing. The safety rating made it easier to choose quickly.",
+    },
+    {
+      name: "Ava",
+      rating: 5,
+      text: "Comfortable place for visitors. Food arrived fresh, and the location was easy to find.",
+    },
+  ];
 
   initialize();
 
@@ -86,6 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.sidebarExpandToggle.addEventListener("click", toggleSidebar);
     refs.closeFilterButton.addEventListener("click", closeDrawer);
     refs.overlay.addEventListener("click", closeDrawer);
+    refs.closeRestaurantModal.addEventListener("click", closeRestaurantModal);
+    refs.restaurantModalOverlay.addEventListener("click", closeRestaurantModal);
     refs.applyFiltersButton.addEventListener("click", closeDrawer);
     refs.clearFiltersButton.addEventListener("click", () => {
       state.filters = {
@@ -104,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         closeDrawer();
+        closeRestaurantModal();
       }
     });
 
@@ -150,8 +175,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function syncPriorityState() {
     const label = getPriorityLabel(state.filters.priority);
+    const minimum = getPrioritySafetyMinimum(state.filters.priority);
     refs.priorityBadge.textContent = label;
-    refs.priorityDescription.textContent = `${label} importance: ${getPriorityDescription(state.filters.priority)}`;
+    refs.priorityDescription.textContent = `${label} importance: ${getPriorityDescription(
+      state.filters.priority
+    )} Showing Eat Safe ${minimum}+ restaurants.`;
   }
 
   async function initializeMap() {
@@ -192,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getFilteredRestaurants() {
     const query = state.filters.query;
+    const prioritySafetyMinimum = getPrioritySafetyMinimum(state.filters.priority);
     const filtered = restaurants.filter((restaurant) => {
       const matchesQuery =
         query.length === 0 ||
@@ -199,8 +228,11 @@ document.addEventListener("DOMContentLoaded", () => {
         restaurant.cuisine.toLowerCase().includes(query) ||
         restaurant.address.toLowerCase().includes(query);
 
+      const eatSafeRating = getEatSafeRating(restaurant);
       const matchesSafety =
-        state.filters.safety === "all" || restaurant.safetyScore >= Number(state.filters.safety);
+        state.filters.safety === "all" || eatSafeRating >= Number(state.filters.safety);
+
+      const matchesPrioritySafety = eatSafeRating >= prioritySafetyMinimum;
 
       const matchesAvailability = [...state.filters.availability].every((filterKey) => restaurant[filterKey]);
 
@@ -215,6 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return (
         matchesQuery &&
         matchesSafety &&
+        matchesPrioritySafety &&
         matchesAvailability &&
         matchesPrice &&
         matchesDistance &&
@@ -223,6 +256,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     return sortRestaurantsByPriority(filtered, state.filters.priority);
+  }
+
+  function getPrioritySafetyMinimum(priority) {
+    if (priority >= 67) {
+      return 5;
+    }
+
+    if (priority >= 34) {
+      return 4;
+    }
+
+    return 3;
   }
 
   function render() {
@@ -249,11 +294,15 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.restaurantList.innerHTML = filteredRestaurants.map(renderRestaurantCard).join("");
 
     refs.restaurantList.querySelectorAll(".restaurant-card").forEach((card) => {
-      card.addEventListener("click", () => selectRestaurant(card.dataset.restaurantId, true));
+      card.addEventListener("click", () => {
+        selectRestaurant(card.dataset.restaurantId, true);
+        openRestaurantModal(card.dataset.restaurantId);
+      });
       card.addEventListener("keydown", (event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           selectRestaurant(card.dataset.restaurantId, true);
+          openRestaurantModal(card.dataset.restaurantId);
         }
       });
     });
@@ -276,6 +325,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const isSelected = restaurant.id === state.selectedRestaurantId;
     const eatSafeRating = getEatSafeRating(restaurant);
     const safetyLabel = getSafetyLabel(eatSafeRating);
+    const safetyToneClass =
+      eatSafeRating >= 5 ? "is-eat-safe-5" : eatSafeRating >= 4 ? "is-eat-safe-4" : "is-eat-safe-3";
     const openStatus = restaurant.openNow ? "Open Now" : "Lunch Spot";
     const safetyStars = Array.from({ length: 5 }, (_, index) =>
       index < eatSafeRating
@@ -319,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="dot">•</span>
             <span>${formatMiles(restaurant.distance)}</span>
           </div>
-          <div class="food-safety-banner">
+          <div class="food-safety-banner ${safetyToneClass}">
             <span class="food-safety-banner__label">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm0 5a3 3 0 1 1 0 6a3 3 0 0 1 0-6Zm0 10.2a8.6 8.6 0 0 1-3.6-3.2c.6-1.2 1.9-2 3.6-2s3 .8 3.6 2A8.6 8.6 0 0 1 12 17.2Z"/></svg>
               ${escapeHtml(safetyLabel)} Food Safety
@@ -366,6 +417,118 @@ document.addEventListener("DOMContentLoaded", () => {
           <span>Safety: ${escapeHtml(getSafetyLabel(getEatSafeRating(restaurant)))}</span>
         </div>
         <p class="preview-address">${escapeHtml(restaurant.address)}</p>
+      </div>
+    `;
+  }
+
+  function openRestaurantModal(restaurantId) {
+    const restaurant = state.currentRestaurants.find((item) => item.id === restaurantId);
+    if (!restaurant) {
+      return;
+    }
+
+    refs.restaurantModalContent.innerHTML = renderRestaurantModalContent(restaurant);
+    refs.restaurantModal.hidden = false;
+    refs.restaurantModalOverlay.hidden = false;
+    document.body.classList.add("is-filter-open");
+
+    requestAnimationFrame(() => {
+      refs.restaurantModal.classList.add("is-open");
+      refs.restaurantModalOverlay.classList.add("is-visible");
+    });
+
+    refs.closeRestaurantModal.focus();
+  }
+
+  function closeRestaurantModal() {
+    if (refs.restaurantModal.hidden) {
+      return;
+    }
+
+    refs.restaurantModal.classList.remove("is-open");
+    refs.restaurantModalOverlay.classList.remove("is-visible");
+    window.setTimeout(() => {
+      refs.restaurantModal.hidden = true;
+      refs.restaurantModalOverlay.hidden = true;
+      if (refs.drawer.hidden) {
+        document.body.classList.remove("is-filter-open");
+      }
+    }, 220);
+  }
+
+  function renderRestaurantModalContent(restaurant) {
+    const eatSafeRating = getEatSafeRating(restaurant);
+    const safetyLabel = getSafetyLabel(eatSafeRating);
+    const safetyToneClass =
+      eatSafeRating >= 5 ? "is-eat-safe-5" : eatSafeRating >= 4 ? "is-eat-safe-4" : "is-eat-safe-3";
+    const safetyStars = Array.from({ length: 5 }, (_, index) =>
+      index < eatSafeRating
+        ? '<span class="food-safety-star is-filled">★</span>'
+        : '<span class="food-safety-star">★</span>'
+    ).join("");
+    const reviews = reviewSamples
+      .map(
+        (review) => `
+          <article class="review-card">
+            <div class="review-card__header">
+              <strong>${escapeHtml(review.name)}</strong>
+              <span>${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)}</span>
+            </div>
+            <p>${escapeHtml(review.text)}</p>
+          </article>
+        `
+      )
+      .join("");
+
+    return `
+      <div class="restaurant-modal__hero">
+        <img src="${restaurant.image}" alt="${escapeHtml(restaurant.name)} dining area" />
+      </div>
+      <div class="restaurant-modal__body">
+        <div class="restaurant-modal__title-row">
+          <div>
+            <p class="restaurant-modal__eyebrow">${escapeHtml(restaurant.cuisine)} · ${restaurant.priceLevel}</p>
+            <h2 id="restaurantModalTitle">${escapeHtml(restaurant.name)}</h2>
+          </div>
+          <span class="restaurant-modal__status">${restaurant.openNow ? "Open Now" : "Lunch Spot"}</span>
+        </div>
+
+        <div class="restaurant-modal__stats">
+          <div>
+            <span>Rating</span>
+            <strong>${restaurant.rating.toFixed(1)}</strong>
+            <small>User score</small>
+          </div>
+          <div>
+            <span>Reviews</span>
+            <strong>${restaurant.reviewCount.toLocaleString()}</strong>
+            <small>User ratings</small>
+          </div>
+          <div>
+            <span>Wait</span>
+            <strong>${escapeHtml(restaurant.waitTime.replace(" wait", ""))}</strong>
+            <small>Estimated wait</small>
+          </div>
+        </div>
+
+        <div class="food-safety-banner ${safetyToneClass}">
+          <span class="food-safety-banner__label">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm0 5a3 3 0 1 1 0 6a3 3 0 0 1 0-6Zm0 10.2a8.6 8.6 0 0 1-3.6-3.2c.6-1.2 1.9-2 3.6-2s3 .8 3.6 2A8.6 8.6 0 0 1 12 17.2Z"/></svg>
+            ${escapeHtml(safetyLabel)} Food Safety
+          </span>
+          <span class="food-safety-banner__stars" aria-label="${eatSafeRating} out of 5 food safety rating">${safetyStars}</span>
+        </div>
+
+        <dl class="restaurant-modal__details">
+          <div><dt>Address</dt><dd>${escapeHtml(restaurant.address)}</dd></div>
+          <div><dt>Distance</dt><dd>${formatMiles(restaurant.distance)} from current area</dd></div>
+          <div><dt>Availability</dt><dd>${restaurant.openForLunch ? "Open for lunch" : "Limited lunch availability"}</dd></div>
+        </dl>
+
+        <section class="restaurant-modal__reviews">
+          <h3>User Reviews</h3>
+          ${reviews}
+        </section>
       </div>
     `;
   }

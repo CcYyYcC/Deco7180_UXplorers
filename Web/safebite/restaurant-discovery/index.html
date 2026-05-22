@@ -141,27 +141,47 @@
       </div>
 
       <div class="drawer-content">
-        <section class="filter-section">
+        <section class="filter-section filter-section--safety">
           <div class="filter-section__heading">
-            <div>
-              <p class="filter-section__eyebrow">Priority Filter</p>
+            <div class="filter-title-row">
+              <svg class="filter-title-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm0 2.2 5 2.1V11c0 3.6-2.2 7-5 8.5C9.2 18 7 14.6 7 11V6.3l5-2.1Zm3.5 5.4-4.4 4.4-2-2-1.4 1.4 3.4 3.4 5.8-5.8-1.4-1.4Z"/>
+              </svg>
               <h3>Food Safety Rating</h3>
             </div>
+            <span class="filter-priority-pill">Priority Filter</span>
           </div>
           <p class="filter-copy">Filter restaurants by their food safety inspection score.</p>
           <div class="segmented-grid" id="safetyRatingFilters">
-            <button class="chip-button is-selected" type="button" data-filter-group="safety" data-value="all">All</button>
-            <button class="chip-button" type="button" data-filter-group="safety" data-value="3">3+</button>
-            <button class="chip-button" type="button" data-filter-group="safety" data-value="4">4+</button>
-            <button class="chip-button" type="button" data-filter-group="safety" data-value="5">5</button>
+            <button class="chip-button is-selected" type="button" data-filter-group="safety" data-value="all">
+              <span class="chip-button__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Zm0 4.5-1.6 3.2-3.5.5 2.5 2.5-.6 3.5 3.2-1.7 3.2 1.7-.6-3.5 2.5-2.5-3.5-.5L12 7.5Z"/></svg></span>
+              <span>All</span>
+            </button>
+            <button class="chip-button" type="button" data-filter-group="safety" data-value="3">
+              <span class="chip-button__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Zm0 4.5-1.6 3.2-3.5.5 2.5 2.5-.6 3.5 3.2-1.7 3.2 1.7-.6-3.5 2.5-2.5-3.5-.5L12 7.5Z"/></svg></span>
+              <span>3+</span>
+            </button>
+            <button class="chip-button" type="button" data-filter-group="safety" data-value="4">
+              <span class="chip-button__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Zm0 4.5-1.6 3.2-3.5.5 2.5 2.5-.6 3.5 3.2-1.7 3.2 1.7-.6-3.5 2.5-2.5-3.5-.5L12 7.5Z"/></svg></span>
+              <span>4+</span>
+            </button>
+            <button class="chip-button" type="button" data-filter-group="safety" data-value="5">
+              <span class="chip-button__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Zm0 4.5-1.6 3.2-3.5.5 2.5 2.5-.6 3.5 3.2-1.7 3.2 1.7-.6-3.5 2.5-2.5-3.5-.5L12 7.5Z"/></svg></span>
+              <span>5</span>
+            </button>
           </div>
         </section>
 
         <section class="filter-section filter-section--highlight">
           <div class="filter-section__heading">
-            <div>
-              <p class="filter-section__eyebrow">Recommendation Weighting</p>
-              <h3>Safety Importance</h3>
+            <div class="priority-title">
+              <span class="priority-title__icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm3.5 7.6-4.4 4.4-2-2-1.4 1.4 3.4 3.4 5.8-5.8-1.4-1.4Z"/></svg>
+              </span>
+              <div>
+                <h3>Safety Importance</h3>
+                <p>Adjust how we prioritize food safety</p>
+              </div>
             </div>
             <span id="priorityBadge" class="priority-badge">Medium</span>
           </div>
@@ -231,5 +251,20 @@
         <button id="applyFiltersButton" class="button button--primary" type="button">Apply Filters</button>
       </div>
     </aside>
+
+    <div id="restaurantModalOverlay" class="restaurant-modal-overlay" hidden></div>
+    <article
+      id="restaurantModal"
+      class="restaurant-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="restaurantModalTitle"
+      hidden
+    >
+      <button id="closeRestaurantModal" class="restaurant-modal__close" type="button" aria-label="Close restaurant details">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg>
+      </button>
+      <div id="restaurantModalContent" class="restaurant-modal__content"></div>
+    </article>
   </body>
 </html>
