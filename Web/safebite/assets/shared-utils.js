@@ -21,7 +21,7 @@
   };
 
   const getEatSafeSmileySrc = (rating) =>
-    `../assets/images/eat-safe-rating-${normalizeEatSafeRating(rating)}.png`;
+    `../assets/images/eat-safe-rating-${normalizeEatSafeRating(rating)}.svg`;
 
   const getSafetyTone = (restaurantOrRating) => {
     const rating =

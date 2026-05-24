@@ -1,12 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
   const { restaurants, routes } = window.SafeBiteData;
-  const { escapeHtml, getRouteStops, getSafetyLabel } = window.SafeBiteUtils;
+  const { escapeHtml, getRouteStops, getSafetyLevelInfo } = window.SafeBiteUtils;
 
   const state = {
     query: "",
   };
 
   const refs = {
+    menuToggle: document.querySelector("#menuToggle"),
+    siteDrawer: document.querySelector("#siteDrawer"),
+    drawerBackdrop: document.querySelector("#drawerBackdrop"),
     searchForm: document.querySelector("#homeSearchForm"),
     searchInput: document.querySelector("#homeSearchInput"),
     featuredRestaurants: document.querySelector("#featuredRestaurants"),
@@ -21,6 +24,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function bindEvents() {
+    refs.menuToggle.addEventListener("click", toggleDrawer);
+    refs.drawerBackdrop.addEventListener("click", closeDrawer);
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeDrawer();
+      }
+    });
+
     refs.searchInput.addEventListener("input", (event) => {
       state.query = event.currentTarget.value.trim().toLowerCase();
       render();
@@ -33,6 +45,23 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = `../restaurant-discovery/index.html`;
       }
     });
+  }
+
+  function toggleDrawer() {
+    const isOpen = !refs.siteDrawer.hidden;
+    if (isOpen) {
+      closeDrawer();
+      return;
+    }
+    refs.siteDrawer.hidden = false;
+    refs.drawerBackdrop.hidden = false;
+    refs.menuToggle.setAttribute("aria-expanded", "true");
+  }
+
+  function closeDrawer() {
+    refs.siteDrawer.hidden = true;
+    refs.drawerBackdrop.hidden = true;
+    refs.menuToggle.setAttribute("aria-expanded", "false");
   }
 
   function getFilteredRestaurants() {
@@ -78,8 +107,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     refs.featuredRestaurants.innerHTML = items
-      .map(
-        (restaurant) => `
+      .map((restaurant) => {
+        const safetyLevel = getSafetyLevelInfo(restaurant.safetyScore);
+        return `
           <article class="content-card">
             <img src="${restaurant.image}" alt="${escapeHtml(restaurant.name)} interior" />
             <div class="content-card__body">
@@ -87,26 +117,32 @@ document.addEventListener("DOMContentLoaded", () => {
               <h3>${escapeHtml(restaurant.name)}</h3>
               <p>${escapeHtml(restaurant.address)} · ${restaurant.distance.toFixed(1)} mi away · ${restaurant.waitTime} min wait</p>
               <div class="content-card__footer">
-                <span class="safety-pill">${restaurant.safetyScore.toFixed(1)} · ${escapeHtml(
-                  getSafetyLabel(restaurant.safetyScore)
-                )}</span>
+                <span class="safety-pill">
+                  <strong>${restaurant.safetyScore.toFixed(1)}</strong>
+                  <span class="safety-level-chip">
+                    <span
+                      class="safety-level-indicator"
+                      tabindex="0"
+                      role="img"
+                      aria-label="${escapeHtml(safetyLevel.tooltip)}"
+                      data-tooltip="${escapeHtml(safetyLevel.tooltip)}"
+                    >
+                      <img class="safety-level-indicator__icon" src="${safetyLevel.icon}" alt="" aria-hidden="true" />
+                    </span>
+                    <span class="safety-level-chip__text">${escapeHtml(safetyLevel.label)}</span>
+                  </span>
+                </span>
                 <a class="content-link" href="../restaurant-discovery/index.html">Open page</a>
               </div>
             </div>
           </article>
-        `
-      )
+        `;
+      })
       .join("");
   }
 
   function renderRoutes() {
     const items = getFilteredRoutes();
-    const routeImages = [
-      "../assets/images/pixabay-interior-2305694_640.jpg",
-      "../assets/images/pixabay-wine-8346641_640.jpg",
-      "../assets/images/pexels-outdoor-dining-1846137.jpg",
-    ];
-
     if (!items.length) {
       refs.featuredRoutes.innerHTML = `
         <div class="search-empty">No featured routes match that search. Try another keyword.</div>
@@ -115,15 +151,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     refs.featuredRoutes.innerHTML = items
-      .map((route, index) => {
+      .map((route) => {
         const stopNames = getRouteStops(route)
           .map((stop) => stop.name)
           .join(" → ");
-        const image = routeImages[index % routeImages.length];
 
         return `
           <article class="content-card">
-            <img src="${image}" alt="${escapeHtml(route.name)} route preview" />
+            <img src="../assets/images/restaurant-3.jpg" alt="${escapeHtml(route.name)} route preview" />
             <div class="content-card__body">
               <span class="content-card__meta">${route.estimatedWalkingTime} · ${route.priceLevel}</span>
               <h3>${escapeHtml(route.name)}</h3>

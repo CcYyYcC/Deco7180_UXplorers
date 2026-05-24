@@ -1,4 +1,4 @@
-const GOOGLE_MAPS_API_KEY =
+﻿const GOOGLE_MAPS_API_KEY =
   typeof window !== "undefined" && typeof window.GOOGLE_MAPS_API_KEY === "string"
     ? window.GOOGLE_MAPS_API_KEY.trim()
     : "";
@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     createGooglePinIcon,
     createMapFallback,
     escapeHtml,
+    formatEatSafeSmileyHtml,
     formatMiles,
     getEatSafeRating,
     getPriorityDescription,
@@ -23,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const state = {
     filters: {
       query: "",
-      safety: "all",
+      sortByRating: false,
       priority: 50,
       availability: new Set(),
       price: "all",
@@ -54,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     drawer: document.querySelector("#filterDrawer"),
     overlay: document.querySelector("#drawerOverlay"),
     prioritySlider: document.querySelector("#safetyPriority"),
+    ratingSortToggle: document.querySelector("#ratingSortToggle"),
     priorityBadge: document.querySelector("#priorityBadge"),
     priorityDescription: document.querySelector("#priorityDescription"),
     restaurantModal: document.querySelector("#restaurantModal"),
@@ -103,6 +105,11 @@ document.addEventListener("DOMContentLoaded", () => {
       render();
     });
 
+    refs.ratingSortToggle.addEventListener("change", (event) => {
+      state.filters.sortByRating = event.currentTarget.checked;
+      render();
+    });
+
     refs.openFilterButton.addEventListener("click", openDrawer);
     refs.sidebarToggle.addEventListener("click", toggleSidebar);
     refs.sidebarExpandToggle.addEventListener("click", toggleSidebar);
@@ -114,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.clearFiltersButton.addEventListener("click", () => {
       state.filters = {
         query: state.filters.query,
-        safety: "all",
+        sortByRating: false,
         priority: 50,
         availability: new Set(),
         price: "all",
@@ -170,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     refs.prioritySlider.value = String(state.filters.priority);
+    refs.ratingSortToggle.checked = state.filters.sortByRating;
     syncPriorityState();
   }
 
@@ -229,9 +237,6 @@ document.addEventListener("DOMContentLoaded", () => {
         restaurant.address.toLowerCase().includes(query);
 
       const eatSafeRating = getEatSafeRating(restaurant);
-      const matchesSafety =
-        state.filters.safety === "all" || eatSafeRating >= Number(state.filters.safety);
-
       const matchesPrioritySafety = eatSafeRating >= prioritySafetyMinimum;
 
       const matchesAvailability = [...state.filters.availability].every((filterKey) => restaurant[filterKey]);
@@ -246,7 +251,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       return (
         matchesQuery &&
-        matchesSafety &&
         matchesPrioritySafety &&
         matchesAvailability &&
         matchesPrice &&
@@ -254,6 +258,15 @@ document.addEventListener("DOMContentLoaded", () => {
         matchesCategory
       );
     });
+
+    if (state.filters.sortByRating) {
+      return [...filtered].sort(
+        (first, second) =>
+          second.rating - first.rating ||
+          getEatSafeRating(second) - getEatSafeRating(first) ||
+          first.distance - second.distance
+      );
+    }
 
     return sortRestaurantsByPriority(filtered, state.filters.priority);
   }
@@ -328,11 +341,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const safetyToneClass =
       eatSafeRating >= 5 ? "is-eat-safe-5" : eatSafeRating >= 4 ? "is-eat-safe-4" : "is-eat-safe-3";
     const openStatus = restaurant.openNow ? "Open Now" : "Lunch Spot";
-    const safetyStars = Array.from({ length: 5 }, (_, index) =>
-      index < eatSafeRating
-        ? '<span class="food-safety-star is-filled">★</span>'
-        : '<span class="food-safety-star">★</span>'
-    ).join("");
 
     return `
       <article
@@ -365,18 +373,17 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="rating-line">
             <span class="star">★</span>
             <strong>${restaurant.rating.toFixed(1)}</strong>
-            <span class="dot">•</span>
+            <span class="dot">·</span>
             <span>${escapeHtml(restaurant.cuisine)}</span>
-            <span class="dot">•</span>
+            <span class="dot">·</span>
             <span>${formatMiles(restaurant.distance)}</span>
           </div>
           <div class="food-safety-banner ${safetyToneClass}">
             <span class="food-safety-banner__label">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm0 5a3 3 0 1 1 0 6a3 3 0 0 1 0-6Zm0 10.2a8.6 8.6 0 0 1-3.6-3.2c.6-1.2 1.9-2 3.6-2s3 .8 3.6 2A8.6 8.6 0 0 1 12 17.2Z"/></svg>
               ${escapeHtml(safetyLabel)} Food Safety
             </span>
-            <span class="food-safety-banner__stars" aria-label="${eatSafeRating} out of 5 food safety rating">
-              ${safetyStars}
+            <span class="food-safety-banner__smiley" aria-label="${eatSafeRating} out of 5 food safety rating">
+              ${formatEatSafeSmileyHtml(restaurant, { size: 34, className: "food-safety-smiley" })}
             </span>
           </div>
           <div class="location-line">
@@ -410,7 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="preview-row">
           <span class="star">★</span>
           <strong>${restaurant.rating.toFixed(1)}</strong>
-          <span>•</span>
+          <span>·</span>
           <span>${escapeHtml(restaurant.cuisine)}</span>
         </div>
         <div class="preview-row">
@@ -461,11 +468,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const safetyLabel = getSafetyLabel(eatSafeRating);
     const safetyToneClass =
       eatSafeRating >= 5 ? "is-eat-safe-5" : eatSafeRating >= 4 ? "is-eat-safe-4" : "is-eat-safe-3";
-    const safetyStars = Array.from({ length: 5 }, (_, index) =>
-      index < eatSafeRating
-        ? '<span class="food-safety-star is-filled">★</span>'
-        : '<span class="food-safety-star">★</span>'
-    ).join("");
     const reviews = reviewSamples
       .map(
         (review) => `
@@ -513,10 +515,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div class="food-safety-banner ${safetyToneClass}">
           <span class="food-safety-banner__label">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm0 5a3 3 0 1 1 0 6a3 3 0 0 1 0-6Zm0 10.2a8.6 8.6 0 0 1-3.6-3.2c.6-1.2 1.9-2 3.6-2s3 .8 3.6 2A8.6 8.6 0 0 1 12 17.2Z"/></svg>
             ${escapeHtml(safetyLabel)} Food Safety
           </span>
-          <span class="food-safety-banner__stars" aria-label="${eatSafeRating} out of 5 food safety rating">${safetyStars}</span>
+          <span class="food-safety-banner__smiley" aria-label="${eatSafeRating} out of 5 food safety rating">
+            ${formatEatSafeSmileyHtml(restaurant, { size: 38, className: "food-safety-smiley" })}
+          </span>
         </div>
 
         <dl class="restaurant-modal__details">
@@ -650,3 +653,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 240);
   }
 });
+
+

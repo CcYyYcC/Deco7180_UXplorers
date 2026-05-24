@@ -4,9 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SafeBite | Restaurant Discovery</title>
+    <link rel="icon" type="image/png" href="../assets/images/safebite-site-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="./styles.css?v=nav3" />
+    <link rel="stylesheet" href="./styles.css?v=rating-filter" />
     <script src="../config.js"></script>
     <script defer src="../assets/shared-data.js"></script>
     <script defer src="../assets/shared-utils.js"></script>
@@ -144,32 +145,21 @@
         <section class="filter-section filter-section--safety">
           <div class="filter-section__heading">
             <div class="filter-title-row">
-              <svg class="filter-title-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2 5 5v6c0 5 3.4 9.4 7 11 3.6-1.6 7-6 7-11V5l-7-3Zm0 2.2 5 2.1V11c0 3.6-2.2 7-5 8.5C9.2 18 7 14.6 7 11V6.3l5-2.1Zm3.5 5.4-4.4 4.4-2-2-1.4 1.4 3.4 3.4 5.8-5.8-1.4-1.4Z"/>
-              </svg>
-              <h3>Food Safety Rating</h3>
+              <h3>Sort by Rating</h3>
             </div>
-            <span class="filter-priority-pill">Priority Filter</span>
+            <span class="filter-priority-pill">Ranking</span>
           </div>
-          <p class="filter-copy">Filter restaurants by their food safety inspection score.</p>
-          <div class="segmented-grid" id="safetyRatingFilters">
-            <button class="chip-button is-selected" type="button" data-filter-group="safety" data-value="all">
-              <span class="chip-button__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Zm0 4.5-1.6 3.2-3.5.5 2.5 2.5-.6 3.5 3.2-1.7 3.2 1.7-.6-3.5 2.5-2.5-3.5-.5L12 7.5Z"/></svg></span>
-              <span>All</span>
-            </button>
-            <button class="chip-button" type="button" data-filter-group="safety" data-value="3">
-              <span class="chip-button__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Zm0 4.5-1.6 3.2-3.5.5 2.5 2.5-.6 3.5 3.2-1.7 3.2 1.7-.6-3.5 2.5-2.5-3.5-.5L12 7.5Z"/></svg></span>
-              <span>3+</span>
-            </button>
-            <button class="chip-button" type="button" data-filter-group="safety" data-value="4">
-              <span class="chip-button__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Zm0 4.5-1.6 3.2-3.5.5 2.5 2.5-.6 3.5 3.2-1.7 3.2 1.7-.6-3.5 2.5-2.5-3.5-.5L12 7.5Z"/></svg></span>
-              <span>4+</span>
-            </button>
-            <button class="chip-button" type="button" data-filter-group="safety" data-value="5">
-              <span class="chip-button__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Zm0 4.5-1.6 3.2-3.5.5 2.5 2.5-.6 3.5 3.2-1.7 3.2 1.7-.6-3.5 2.5-2.5-3.5-.5L12 7.5Z"/></svg></span>
-              <span>5</span>
-            </button>
-          </div>
+          <p class="filter-copy">Turn on rating ranking to sort restaurants from highest user rating to lowest.</p>
+          <label class="switch-control" for="ratingSortToggle">
+            <span class="switch-control__copy">
+              <strong>Rank by restaurant rating</strong>
+              <small>Sort results by user rating score</small>
+            </span>
+            <input id="ratingSortToggle" type="checkbox" />
+            <span class="switch-control__track" aria-hidden="true">
+              <span class="switch-control__thumb"></span>
+            </span>
+          </label>
         </section>
 
         <section class="filter-section filter-section--highlight">

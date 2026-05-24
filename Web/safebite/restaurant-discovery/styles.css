@@ -528,9 +528,9 @@ input:focus-visible {
 }
 
 .food-safety-banner.is-eat-safe-3 {
-  border-color: rgba(249, 115, 22, 0.42);
-  background: rgba(249, 115, 22, 0.1);
-  color: #d35400;
+  border-color: rgba(255, 31, 31, 0.34);
+  background: rgba(255, 31, 31, 0.08);
+  color: #d71920;
 }
 
 .food-safety-banner__label {
@@ -542,32 +542,19 @@ input:focus-visible {
   font-weight: 800;
 }
 
-.food-safety-banner__stars {
+.food-safety-banner__smiley {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
   flex: 0 0 auto;
-  font-size: 1.24rem;
   line-height: 1;
 }
 
-.food-safety-star {
-  color: rgba(0, 166, 62, 0.22);
-  color: color-mix(in srgb, currentColor 24%, transparent);
-}
-
-.food-safety-banner.is-eat-safe-4 .food-safety-star {
-  color: rgba(183, 121, 0, 0.24);
-  color: color-mix(in srgb, currentColor 24%, transparent);
-}
-
-.food-safety-banner.is-eat-safe-3 .food-safety-star {
-  color: rgba(211, 84, 0, 0.24);
-  color: color-mix(in srgb, currentColor 24%, transparent);
-}
-
-.food-safety-banner .food-safety-star.is-filled {
-  color: currentColor;
+.food-safety-smiley {
+  width: 34px;
+  height: 34px;
+  display: block;
+  object-fit: contain;
 }
 
 .map-panel {
@@ -1164,6 +1151,89 @@ input:focus-visible {
 .filter-section--safety .chip-button.is-selected .chip-button__icon {
   background: #ffffff;
   color: #3158f5;
+}
+
+.switch-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 92px;
+  margin-top: 24px;
+  padding: 18px 20px;
+  border: 2px solid #dce3ee;
+  border-radius: 16px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.switch-control:hover {
+  border-color: rgba(55, 105, 255, 0.55);
+  box-shadow: 0 12px 28px rgba(55, 105, 255, 0.12);
+}
+
+.switch-control__copy {
+  display: grid;
+  gap: 5px;
+}
+
+.switch-control__copy strong {
+  color: #172033;
+  font-size: 1.02rem;
+}
+
+.switch-control__copy small {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.switch-control input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch-control__track {
+  position: relative;
+  width: 64px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #dbe2ee;
+  transition: background-color 180ms ease;
+}
+
+.switch-control__thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.22);
+  transition: transform 180ms ease;
+}
+
+.switch-control input:checked + .switch-control__track {
+  background: #3769ff;
+}
+
+.switch-control input:checked + .switch-control__track .switch-control__thumb {
+  transform: translateX(28px);
+}
+
+.switch-control:has(input:checked) {
+  border-color: #3769ff;
+  background: #edf3ff;
+}
+
+.switch-control input:focus-visible + .switch-control__track {
+  outline: 3px solid rgba(55, 105, 255, 0.28);
+  outline-offset: 4px;
 }
 
 .segmented-grid--distance .chip-button:first-child,
