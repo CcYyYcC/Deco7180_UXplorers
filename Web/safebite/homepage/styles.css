@@ -408,7 +408,7 @@ input:focus-visible {
   min-height: 100%;
   background:
     linear-gradient(180deg, rgba(10, 11, 12, 0.12), rgba(10, 11, 12, 0.24)),
-    url("../assets/images/homepage-hero-santorini.png") center center / cover no-repeat;
+    url("../assets/images/pixabay-wine-8346641_640.jpg") center center / cover no-repeat;
 }
 
 .hero-stage__visual::after {

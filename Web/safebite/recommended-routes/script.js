@@ -281,13 +281,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function bindEvents() {
-        refs.search.addEventListener("input", (event) => {
-            state.query = event.currentTarget.value.trim().toLowerCase();
-            render();
-        });
+        if (refs.search) {
+            refs.search.addEventListener("input", (event) => {
+                state.query = event.currentTarget.value.trim().toLowerCase();
+                render();
+            });
+        }
     }
 
     function renderSavedSpots() {
+        if (!refs.savedSpotsList) {
+            return;
+        }
+
         refs.savedSpotsList.innerHTML = recommendedSavedSpots
             .map(
                 (spot) => `
@@ -396,6 +402,27 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function getRouteFoodSafetyScore(route) {
+        if (typeof route.foodSafetyScore === "number") {
+            return route.foodSafetyScore;
+        }
+
+        if (typeof route.eatSafeRating === "number") {
+            return Math.round((route.eatSafeRating / 5) * 100);
+        }
+
+        return 0;
+    }
+
+    function formatWalkingTime(time) {
+        const value = String(time || "").trim();
+        if (!value) {
+            return "0 mins walk";
+        }
+
+        return /\bwalk\b/i.test(value) ? value : `${value} walk`;
+    }
+
     function render() {
         state.visibleRoutes = getFilteredRoutes();
 
@@ -468,8 +495,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderRouteCard(route) {
         const isSelected = route.id === state.selectedRouteId;
-        const progressWidth = Math.max(Math.min(route.foodSafetyScore, 100), 0);
+        const foodSafetyScore = getRouteFoodSafetyScore(route);
+        const progressWidth = Math.max(Math.min(foodSafetyScore, 100), 0);
         const tagText = "Recommended route";
+        const walkingTime = formatWalkingTime(route.estimatedWalkingTime);
 
         const stopChips = getRouteStopsForRoute(route)
             .map(
@@ -486,13 +515,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="route-meta">
           <span>${formatKm(route.distanceKm)}</span>
           <span>${route.priceLevel}</span>
-          <strong>${route.estimatedWalkingTime}</strong>
+          <strong>${escapeHtml(walkingTime)}</strong>
         </div>
         <div class="route-stop-list">${stopChips}</div>
         <div class="progress-row">
           <div class="progress-row__header">
             <span>Food Safety Score</span>
-            <strong>${route.foodSafetyScore}/100</strong>
+            <strong>${foodSafetyScore}/100</strong>
           </div>
           <div class="progress-track">
             <div class="progress-fill" style="width: ${progressWidth}%"></div>
@@ -687,11 +716,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const stopNames = getRouteStopsForRoute(route)
             .map((stop) => stop.name)
-            .join(" → ");
+            .join(" -> ");
 
         refs.mapCallout.innerHTML = `
       <strong>${escapeHtml(route.name)}</strong>
-      <span>${escapeHtml(stopNames)} · ${route.estimatedWalkingTime} · ${formatKm(route.distanceKm)}</span>
+      <span>${escapeHtml(stopNames)} - ${escapeHtml(formatWalkingTime(route.estimatedWalkingTime))} - ${formatKm(route.distanceKm)}</span>
     `;
     }
 
@@ -737,7 +766,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 zIndex: 300,
                 icon: createGooglePinIcon({
                     fillColor: area.color,
-                    text: "★",
+                    text: "*",
                     scale: 0.9,
                 }),
             });

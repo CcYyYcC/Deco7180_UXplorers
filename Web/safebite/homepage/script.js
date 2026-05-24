@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const { restaurants, routes } = window.SafeBiteData;
-  const { escapeHtml, getRouteStops, getSafetyLevelInfo } = window.SafeBiteUtils;
+  const { escapeHtml, formatEatSafeSmileyHtml, getEatSafeRating, getRouteStops, getSafetyLabel } = window.SafeBiteUtils;
 
   const state = {
     query: "",
@@ -40,9 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     refs.searchForm.addEventListener("submit", (event) => {
       event.preventDefault();
+      const query = refs.searchInput.value.trim();
       const firstRestaurant = getFilteredRestaurants()[0];
-      if (firstRestaurant) {
-        window.location.href = `../restaurant-discovery/index.html`;
+      if (firstRestaurant || query) {
+        const queryString = query ? `?q=${encodeURIComponent(query)}` : "";
+        window.location.href = `../restaurant-discovery/index.html${queryString}`;
       }
     });
   }
@@ -73,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return featured;
     }
 
-    return featured.filter((restaurant) => {
+    return restaurants.filter((restaurant) => {
       const haystack = `${restaurant.name} ${restaurant.cuisine} ${restaurant.address}`.toLowerCase();
       return haystack.includes(state.query);
     });
@@ -108,7 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     refs.featuredRestaurants.innerHTML = items
       .map((restaurant) => {
-        const safetyLevel = getSafetyLevelInfo(restaurant.safetyScore);
+        const eatSafeRating = getEatSafeRating(restaurant);
+        const safetyLabel = getSafetyLabel(eatSafeRating);
         return `
           <article class="content-card">
             <img src="${restaurant.image}" alt="${escapeHtml(restaurant.name)} interior" />
@@ -118,21 +121,21 @@ document.addEventListener("DOMContentLoaded", () => {
               <p>${escapeHtml(restaurant.address)} · ${restaurant.distance.toFixed(1)} mi away · ${restaurant.waitTime} min wait</p>
               <div class="content-card__footer">
                 <span class="safety-pill">
-                  <strong>${restaurant.safetyScore.toFixed(1)}</strong>
+                  <strong>${restaurant.rating.toFixed(1)}</strong>
                   <span class="safety-level-chip">
                     <span
                       class="safety-level-indicator"
                       tabindex="0"
                       role="img"
-                      aria-label="${escapeHtml(safetyLevel.tooltip)}"
-                      data-tooltip="${escapeHtml(safetyLevel.tooltip)}"
+                      aria-label="${eatSafeRating} out of 5 food safety rating"
+                      data-tooltip="${eatSafeRating} out of 5 food safety rating"
                     >
-                      <img class="safety-level-indicator__icon" src="${safetyLevel.icon}" alt="" aria-hidden="true" />
+                      ${formatEatSafeSmileyHtml(restaurant, { size: 22, className: "safety-level-indicator__icon" })}
                     </span>
-                    <span class="safety-level-chip__text">${escapeHtml(safetyLevel.label)}</span>
+                    <span class="safety-level-chip__text">${escapeHtml(safetyLabel)}</span>
                   </span>
                 </span>
-                <a class="content-link" href="../restaurant-discovery/index.html">Open page</a>
+                <a class="content-link" href="../restaurant-discovery/index.html?q=${encodeURIComponent(restaurant.name)}">Open page</a>
               </div>
             </div>
           </article>
@@ -158,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return `
           <article class="content-card">
-            <img src="../assets/images/restaurant-3.jpg" alt="${escapeHtml(route.name)} route preview" />
+            <img src="../assets/images/pexels-quang-nguyen-vinh-222549-6877610.jpg" alt="${escapeHtml(route.name)} route preview" />
             <div class="content-card__body">
               <span class="content-card__meta">${route.estimatedWalkingTime} · ${route.priceLevel}</span>
               <h3>${escapeHtml(route.name)}</h3>

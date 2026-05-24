@@ -38,6 +38,11 @@ document.addEventListener("DOMContentLoaded", () => {
     currentRestaurants: [],
   };
 
+  const initialQuery = new URLSearchParams(window.location.search).get("q");
+  if (initialQuery) {
+    state.filters.query = initialQuery.trim().toLowerCase();
+  }
+
   const refs = {
     searchInput: document.querySelector("#searchInput"),
     restaurantList: document.querySelector("#restaurantList"),
@@ -64,28 +69,205 @@ document.addEventListener("DOMContentLoaded", () => {
     closeRestaurantModal: document.querySelector("#closeRestaurantModal"),
   };
 
-  const reviewSamples = [
-    {
-      name: "Mia",
-      rating: 5,
-      text: "Clear menu information and a spotless dining room. Staff were confident answering food safety questions.",
+  const inspectionSummaries = {
+    5: {
+      status: "Compliant",
+      result: "Excellent",
+      complaintRecord: "Low complaint record",
+      followUp: "Routine inspection only",
     },
-    {
-      name: "Thomas",
-      rating: 4,
-      text: "Good service and reliable timing. The safety rating made it easier to choose quickly.",
+    4: {
+      status: "Compliant with minor notes",
+      result: "Good",
+      complaintRecord: "Moderate complaint record",
+      followUp: "Minor follow-up recommended",
     },
-    {
-      name: "Ava",
-      rating: 5,
-      text: "Comfortable place for visitors. Food arrived fresh, and the location was easy to find.",
+    3: {
+      status: "Improvement required",
+      result: "Needs attention",
+      complaintRecord: "Recent complaint record",
+      followUp: "Follow-up inspection recommended",
     },
-  ];
+  };
+
+  const reviewsByRestaurant = {
+    "longwang-restaurant": [
+      {
+        name: "Emily Chen",
+        rating: 5,
+        text: "Elegant room, quick service, and the staff explained the seafood options clearly. A reassuring choice for a first night in Brisbane.",
+      },
+      {
+        name: "James Walker",
+        rating: 5,
+        text: "The dining area felt calm and clean. Food arrived hot, and the Eat Safe 5 score matched the experience.",
+      },
+      {
+        name: "Priya Nair",
+        rating: 4,
+        text: "Great city location and polished service. I would book ahead next time because it became busy fast.",
+      },
+    ],
+    "opa-bar-and-mezze": [
+      {
+        name: "Sofia Papadakis",
+        rating: 5,
+        text: "Bright, lively atmosphere with generous mezze plates. Staff were attentive without rushing the table.",
+      },
+      {
+        name: "Oliver Smith",
+        rating: 4,
+        text: "Excellent riverside stop for sharing plates. The wait was close to the estimate, which helped with our route plan.",
+      },
+      {
+        name: "Hannah Lee",
+        rating: 5,
+        text: "Fresh dips, warm bread, and very clear allergen guidance. It felt visitor-friendly and easy to trust.",
+      },
+    ],
+    "babylon-brisbane": [
+      {
+        name: "Noah Williams",
+        rating: 4,
+        text: "Good for a relaxed group meal. The view and location were the highlights, and the staff handled a busy service well.",
+      },
+      {
+        name: "Aisha Khan",
+        rating: 4,
+        text: "Flavours were strong and the menu had enough variety for different diets. I liked seeing the safety score before deciding.",
+      },
+      {
+        name: "Lucas Martin",
+        rating: 5,
+        text: "Friendly team and a memorable setting near the river. The food came out neatly plated and fresh.",
+      },
+    ],
+    "dark-shepherd": [
+      {
+        name: "Grace Thompson",
+        rating: 4,
+        text: "Stylish venue and excellent grilled dishes. I would like clearer safety information on the menu before ordering.",
+      },
+      {
+        name: "Daniel Roberts",
+        rating: 4,
+        text: "The staff were helpful and the meal was enjoyable, but the lower Eat Safe score made me choose simpler dishes.",
+      },
+      {
+        name: "Mei Lin",
+        rating: 3,
+        text: "Nice atmosphere for dinner, though service felt stretched. I would check recent inspection details before returning.",
+      },
+    ],
+    "toscano-bar-and-kitchen": [
+      {
+        name: "Isabella Rossi",
+        rating: 5,
+        text: "Warm service, beautiful pasta, and a spotless open dining area. The high safety score made it an easy pick.",
+      },
+      {
+        name: "Ethan Brown",
+        rating: 4,
+        text: "Great for a polished Italian lunch. Prices are higher, but the food quality and location felt worth it.",
+      },
+      {
+        name: "Chloe Wilson",
+        rating: 5,
+        text: "Comfortable seating and clear menu guidance. I would recommend it to visitors who want something reliable.",
+      },
+    ],
+    "massimo-restaurant-and-bar": [
+      {
+        name: "Liam Anderson",
+        rating: 4,
+        text: "Lovely river setting and strong seafood options. Service was professional even during a busy dinner window.",
+      },
+      {
+        name: "Zara Ahmed",
+        rating: 5,
+        text: "The staff checked dietary needs carefully, which made the whole meal feel safer and more relaxed.",
+      },
+      {
+        name: "Matthew Taylor",
+        rating: 4,
+        text: "Good choice for a scenic meal. The safety rating was solid, though I would like more visible hygiene notes on the page.",
+      },
+    ],
+    "mr-wabi": [
+      {
+        name: "Sophie Nguyen",
+        rating: 5,
+        text: "Fun atmosphere with quick, flavourful dishes. The table turnover was fast but the service still felt personal.",
+      },
+      {
+        name: "Jack Miller",
+        rating: 4,
+        text: "A convenient stop near the city centre. The food was fresh, and the wait time estimate was accurate.",
+      },
+      {
+        name: "Nina Patel",
+        rating: 5,
+        text: "Great for visitors who want Asian food without too much planning. Clean setting and confident staff.",
+      },
+    ],
+    "donna-chang": [
+      {
+        name: "Ruby Harris",
+        rating: 4,
+        text: "Beautiful interior and careful Cantonese dishes. The team was helpful when we asked about ingredients.",
+      },
+      {
+        name: "Aaron Li",
+        rating: 5,
+        text: "Excellent lunch spot with smooth service. The food safety score made it feel dependable for guests.",
+      },
+      {
+        name: "Maya Johnson",
+        rating: 4,
+        text: "Refined food and a central address. It felt a little formal, but very comfortable once seated.",
+      },
+    ],
+    "madame-wu": [
+      {
+        name: "Ben Carter",
+        rating: 4,
+        text: "Great view and creative dishes. I liked the restaurant, although the safety score made me compare it with nearby options.",
+      },
+      {
+        name: "Lily Zhang",
+        rating: 5,
+        text: "Service was warm and the menu was easy to navigate. A strong pick for a riverside dinner.",
+      },
+      {
+        name: "Amelia Davis",
+        rating: 4,
+        text: "The setting is memorable and the food tasted fresh. I would return for the atmosphere.",
+      },
+    ],
+    "naldham-house": [
+      {
+        name: "Henry Clark",
+        rating: 5,
+        text: "Relaxed but polished, with friendly staff and a comfortable dining room. A good option for modern Australian food.",
+      },
+      {
+        name: "Ella Robinson",
+        rating: 4,
+        text: "The short wait was a bonus. Food quality was strong, and the location worked well for our walking route.",
+      },
+      {
+        name: "Sam Wilson",
+        rating: 4,
+        text: "Nice balance of casual and special. I appreciated seeing the safety score alongside the user rating.",
+      },
+    ],
+  };
 
   initialize();
 
   async function initialize() {
     bindEvents();
+    refs.searchInput.value = initialQuery ? initialQuery.trim() : "";
     syncFilterControls();
     render();
     await initializeMap();
@@ -117,6 +299,17 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.overlay.addEventListener("click", closeDrawer);
     refs.closeRestaurantModal.addEventListener("click", closeRestaurantModal);
     refs.restaurantModalOverlay.addEventListener("click", closeRestaurantModal);
+    refs.restaurantModalContent.addEventListener("click", (event) => {
+      const safetyButton = event.target.closest("[data-safety-report]");
+      if (safetyButton) {
+        openSafetyReport(safetyButton.dataset.safetyReport);
+        return;
+      }
+
+      if (event.target.closest("[data-close-safety-report]")) {
+        closeSafetyReport();
+      }
+    });
     refs.applyFiltersButton.addEventListener("click", closeDrawer);
     refs.clearFiltersButton.addEventListener("click", () => {
       state.filters = {
@@ -134,6 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
+        closeSafetyReport();
         closeDrawer();
         closeRestaurantModal();
       }
@@ -237,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
         restaurant.address.toLowerCase().includes(query);
 
       const eatSafeRating = getEatSafeRating(restaurant);
-      const matchesPrioritySafety = eatSafeRating >= prioritySafetyMinimum;
+      const matchesPrioritySafety = query.length > 0 || eatSafeRating >= prioritySafetyMinimum;
 
       const matchesAvailability = [...state.filters.availability].every((filterKey) => restaurant[filterKey]);
 
@@ -447,11 +641,34 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.closeRestaurantModal.focus();
   }
 
+  function openSafetyReport(restaurantId) {
+    const report = refs.restaurantModalContent.querySelector(`[data-safety-report-panel="${restaurantId}"]`);
+    if (!report) {
+      return;
+    }
+
+    report.hidden = false;
+    report.classList.add("is-open");
+  }
+
+  function closeSafetyReport() {
+    const report = refs.restaurantModalContent.querySelector(".safety-report-panel.is-open");
+    if (!report) {
+      return;
+    }
+
+    report.classList.remove("is-open");
+    window.setTimeout(() => {
+      report.hidden = true;
+    }, 180);
+  }
+
   function closeRestaurantModal() {
     if (refs.restaurantModal.hidden) {
       return;
     }
 
+    closeSafetyReport();
     refs.restaurantModal.classList.remove("is-open");
     refs.restaurantModalOverlay.classList.remove("is-visible");
     window.setTimeout(() => {
@@ -468,7 +685,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const safetyLabel = getSafetyLabel(eatSafeRating);
     const safetyToneClass =
       eatSafeRating >= 5 ? "is-eat-safe-5" : eatSafeRating >= 4 ? "is-eat-safe-4" : "is-eat-safe-3";
-    const reviews = reviewSamples
+    const inspection = inspectionSummaries[eatSafeRating] ?? inspectionSummaries[3];
+    const reviews = (reviewsByRestaurant[restaurant.id] ?? [])
       .map(
         (review) => `
           <article class="review-card">
@@ -483,55 +701,98 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
 
     return `
-      <div class="restaurant-modal__hero">
-        <img src="${restaurant.image}" alt="${escapeHtml(restaurant.name)} dining area" />
-      </div>
       <div class="restaurant-modal__body">
-        <div class="restaurant-modal__title-row">
-          <div>
-            <p class="restaurant-modal__eyebrow">${escapeHtml(restaurant.cuisine)} · ${restaurant.priceLevel}</p>
-            <h2 id="restaurantModalTitle">${escapeHtml(restaurant.name)}</h2>
+        <section class="restaurant-modal__info" aria-label="${escapeHtml(restaurant.name)} details">
+          <div class="restaurant-modal__hero">
+            <img src="${restaurant.image}" alt="${escapeHtml(restaurant.name)} dining area" />
           </div>
-          <span class="restaurant-modal__status">${restaurant.openNow ? "Open Now" : "Lunch Spot"}</span>
-        </div>
 
-        <div class="restaurant-modal__stats">
-          <div>
-            <span>Rating</span>
-            <strong>${restaurant.rating.toFixed(1)}</strong>
-            <small>User score</small>
+          <div class="restaurant-modal__info-body">
+            <div class="restaurant-modal__title-row">
+              <div>
+                <p class="restaurant-modal__eyebrow">${escapeHtml(restaurant.cuisine)} · ${restaurant.priceLevel}</p>
+                <h2 id="restaurantModalTitle">${escapeHtml(restaurant.name)}</h2>
+              </div>
+              <span class="restaurant-modal__status">${restaurant.openNow ? "Open Now" : "Lunch Spot"}</span>
+            </div>
+
+            <div class="restaurant-modal__stats">
+              <div>
+                <span>Rating</span>
+                <strong>${restaurant.rating.toFixed(1)}</strong>
+                <small>User score</small>
+              </div>
+              <div>
+                <span>Reviews</span>
+                <strong>${restaurant.reviewCount.toLocaleString()}</strong>
+                <small>User ratings</small>
+              </div>
+              <div>
+                <span>Wait</span>
+                <strong>${escapeHtml(restaurant.waitTime.replace(" wait", ""))}</strong>
+                <small>Estimated wait</small>
+              </div>
+            </div>
+
+            <button
+              class="food-safety-banner food-safety-banner--button ${safetyToneClass}"
+              type="button"
+              data-safety-report="${restaurant.id}"
+              aria-label="Open government food safety report for ${escapeHtml(restaurant.name)}"
+            >
+              <span class="food-safety-banner__label">
+                ${escapeHtml(safetyLabel)} Food Safety
+              </span>
+              <span class="food-safety-banner__smiley" aria-label="${eatSafeRating} out of 5 food safety rating">
+                ${formatEatSafeSmileyHtml(restaurant, { size: 38, className: "food-safety-smiley" })}
+              </span>
+            </button>
+
+            <dl class="restaurant-modal__details">
+              <div><dt>Address</dt><dd>${escapeHtml(restaurant.address)}</dd></div>
+              <div><dt>Distance</dt><dd>${formatMiles(restaurant.distance)} from current area</dd></div>
+              <div><dt>Availability</dt><dd>${restaurant.openForLunch ? "Open for lunch" : "Limited lunch availability"}</dd></div>
+            </dl>
           </div>
-          <div>
-            <span>Reviews</span>
-            <strong>${restaurant.reviewCount.toLocaleString()}</strong>
-            <small>User ratings</small>
-          </div>
-          <div>
-            <span>Wait</span>
-            <strong>${escapeHtml(restaurant.waitTime.replace(" wait", ""))}</strong>
-            <small>Estimated wait</small>
-          </div>
-        </div>
+        </section>
 
-        <div class="food-safety-banner ${safetyToneClass}">
-          <span class="food-safety-banner__label">
-            ${escapeHtml(safetyLabel)} Food Safety
-          </span>
-          <span class="food-safety-banner__smiley" aria-label="${eatSafeRating} out of 5 food safety rating">
-            ${formatEatSafeSmileyHtml(restaurant, { size: 38, className: "food-safety-smiley" })}
-          </span>
-        </div>
-
-        <dl class="restaurant-modal__details">
-          <div><dt>Address</dt><dd>${escapeHtml(restaurant.address)}</dd></div>
-          <div><dt>Distance</dt><dd>${formatMiles(restaurant.distance)} from current area</dd></div>
-          <div><dt>Availability</dt><dd>${restaurant.openForLunch ? "Open for lunch" : "Limited lunch availability"}</dd></div>
-        </dl>
-
-        <section class="restaurant-modal__reviews">
+        <aside class="restaurant-modal__reviews" aria-label="${escapeHtml(restaurant.name)} user reviews">
           <h3>User Reviews</h3>
           ${reviews}
-        </section>
+        </aside>
+
+        <aside
+          class="safety-report-panel"
+          data-safety-report-panel="${restaurant.id}"
+          aria-label="Government food safety report for ${escapeHtml(restaurant.name)}"
+          hidden
+        >
+          <div class="safety-report-panel__card">
+            <button class="safety-report-panel__close" type="button" data-close-safety-report aria-label="Close food safety report">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg>
+            </button>
+            <p class="safety-report-panel__eyebrow">Queensland Government Food Safety Report</p>
+            <h3>${escapeHtml(restaurant.name)}</h3>
+            <div class="safety-report-panel__rating ${safetyToneClass}">
+              <span>${formatEatSafeSmileyHtml(restaurant, { size: 46, className: "food-safety-smiley" })}</span>
+              <div>
+                <strong>${escapeHtml(safetyLabel)}</strong>
+                <small>Eat Safe ${eatSafeRating} / 5</small>
+              </div>
+            </div>
+            <dl class="safety-report-panel__details">
+              <div><dt>Inspection result</dt><dd>${escapeHtml(inspection.result)}</dd></div>
+              <div><dt>Compliance status</dt><dd>${escapeHtml(inspection.status)}</dd></div>
+              <div><dt>Hygiene score</dt><dd>${restaurant.safetyPercent}% · Grade ${escapeHtml(restaurant.safetyGrade)}</dd></div>
+              <div><dt>Complaint record</dt><dd>${escapeHtml(inspection.complaintRecord)}</dd></div>
+              <div><dt>Follow-up action</dt><dd>${escapeHtml(inspection.followUp)}</dd></div>
+              <div><dt>Inspection authority</dt><dd>Brisbane City Council food business monitoring</dd></div>
+            </dl>
+            <p class="safety-report-panel__note">
+              This prototype report summarizes official-style food safety signals for trip planning and restaurant comparison.
+            </p>
+          </div>
+        </aside>
       </div>
     `;
   }

@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mapReady: false,
         routeMarkers: [],
         segmentMarkers: [],
+        routePolyline: null,
         directionsService: null,
         directionsRenderer: null,
         previousSummary: null,
@@ -92,10 +93,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function bindEvents() {
-        refs.wishlistSearch.addEventListener("input", (e) => {
-            state.query = e.currentTarget.value.trim().toLowerCase();
-            renderWishlist();
-        });
+        if (refs.wishlistSearch) {
+            refs.wishlistSearch.addEventListener("input", (e) => {
+                state.query = e.currentTarget.value.trim().toLowerCase();
+                renderWishlist();
+            });
+        }
 
         // ✅ 侧边栏折叠事件
         refs.sidebarToggleBtn.addEventListener("click", () => {
@@ -173,6 +176,15 @@ document.addEventListener("DOMContentLoaded", () => {
             map: state.map,
             suppressMarkers: true,
             polylineOptions: { strokeColor: "#ef4444", strokeOpacity: 0.9, strokeWeight: 5 },
+        });
+
+        state.routePolyline = new window.google.maps.Polyline({
+            map: state.map,
+            path: [],
+            strokeColor: "#ef4444",
+            strokeOpacity: 0.92,
+            strokeWeight: 5,
+            zIndex: 450,
         });
 
         state.map.addListener("click", (e) => {
@@ -386,6 +398,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         // 最核心的清理代码
         if (state.directionsRenderer) state.directionsRenderer.setDirections({ routes: [] });
+        if (state.routePolyline) state.routePolyline.setPath([]);
+    }
+
+    function getPositionValue(position, key) {
+        return typeof position[key] === "function" ? position[key]() : position[key];
+    }
+
+    function calculateFallbackSummary(positions) {
+        let totalKm = 0;
+        for (let index = 1; index < positions.length; index += 1) {
+            const previous = positions[index - 1];
+            const current = positions[index];
+            const previousLat = getPositionValue(previous, "lat");
+            const previousLng = getPositionValue(previous, "lng");
+            const currentLat = getPositionValue(current, "lat");
+            const currentLng = getPositionValue(current, "lng");
+            const toRadians = (degrees) => (degrees * Math.PI) / 180;
+            const earthRadiusKm = 6371;
+            const deltaLat = toRadians(currentLat - previousLat);
+            const deltaLng = toRadians(currentLng - previousLng);
+            const a =
+                Math.sin(deltaLat / 2) ** 2 +
+                Math.cos(toRadians(previousLat)) *
+                    Math.cos(toRadians(currentLat)) *
+                    Math.sin(deltaLng / 2) ** 2;
+            totalKm += earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        return {
+            distanceKm: totalKm,
+            walkingMinutes: Math.max(1, Math.round((totalKm / 4.8) * 60)),
+        };
+    }
+
+    function drawFallbackRoute(positions) {
+        if (!state.routePolyline || positions.length < 2) {
+            return;
+        }
+
+        state.routePolyline.setPath(positions);
+        const summary = calculateFallbackSummary(positions);
+        updateDashboard(summary.distanceKm, summary.walkingMinutes);
     }
 
     function drawItineraryOnMap() {
@@ -427,6 +481,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        drawFallbackRoute(positions);
+
         const waypoints = positions
             .slice(1, -1)
             .map((pos) => ({ location: pos, stopover: true }));
@@ -440,6 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
             (response, status) => {
                 if (status === "OK") {
                     state.directionsRenderer.setDirections(response);
+                    if (state.routePolyline) state.routePolyline.setPath([]);
                     let totalMeters = 0;
                     let totalSeconds = 0;
                     response.routes[0].legs.forEach((leg) => {
@@ -458,7 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     updateDashboard(totalMeters / 1000, Math.round(totalSeconds / 60));
                 } else {
-                    updateDashboard(0, 0);
+                    drawFallbackRoute(positions);
                 }
             },
         );
