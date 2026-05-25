@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
         routeMarkers: [],
         segmentMarkers: [],
         routePolyline: null,
+        routeDrawId: 0,
         directionsService: null,
         directionsRenderer: null,
         previousSummary: null,
@@ -55,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         priceLevel: document.querySelector("#priceLevel"),
         clearRouteButton: document.querySelector("#clearRouteButton"),
 
-        // ✅ 按钮更名与合并
+        // 闂?闂備礁婀遍…鍫ニ囬悽绋跨闁规儼妫勯崡鎶芥煛婢跺鐏﹂柛濠傚暱閳藉骞橀幎绛嬧偓妤呮煙椤斿ジ鍙勯柣?
         saveItineraryButton: document.querySelector("#saveItineraryButton"),
         templateNameInput: document.querySelector("#templateNameInput"),
         savedTemplatesList: document.querySelector("#savedTemplatesList"),
@@ -65,11 +66,11 @@ document.addEventListener("DOMContentLoaded", () => {
         routeImportNotice: document.querySelector("#routeImportNotice"),
         clearCustomStopsButton: document.querySelector("#clearCustomStopsButton"),
 
-        // 侧边栏控制
+        // 濠电偞鎸婚惃婊堝幢濞嗘垵楠勯梻浣告惈缁夊鎹㈤幋鐘虫殰闁割偅娲栫粈?
         sidebarToggleBtn: document.querySelector("#sidebarToggleBtn"),
         studioSidebar: document.querySelector("#studioSidebar"),
 
-        // 弹窗
+        // 闁诲孩顔栭崰鏍э耿闁秵鍋?
         modal: document.querySelector("#confirmationModal"),
         modalOverlay: document.querySelector("#modalOverlay"),
         closeModalButton: document.querySelector("#closeModalButton"),
@@ -100,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // ✅ 侧边栏折叠事件
+        // 闂?濠电偞鎸婚惃婊堝幢濞嗘垵楠勯梻浣告惈缁夊鎹㈤幋鐐村弿鐎光偓閸曨偆鐓戦梺缁橆焾娴滎剟鎯冮幋婢?
         refs.sidebarToggleBtn.addEventListener("click", () => {
             refs.studioSidebar.classList.toggle("is-collapsed");
         });
@@ -132,13 +133,13 @@ document.addEventListener("DOMContentLoaded", () => {
             render();
         });
 
-        // ✅ 合并的 Save Itinerary 逻辑
+        // 闂?闂備礁鎲￠懝楣冩偋閸℃稒鍤愰柣鏂垮悑閸?Save Itinerary 闂傚倷绶￠崑鍛ｉ幒鏃€顐?
         refs.saveItineraryButton.addEventListener("click", () => {
             if (state.itineraryIds.length === 0) return;
             const name = refs.templateNameInput.value.trim();
 
             if (name) {
-                // 如果填了名字，就存入下方模版列表
+                // 濠电姷顣介埀顒€鍟块埀顒€缍婇幃妯诲緞鐎ｎ剛鐣藉銈嗗姧缁辨洟宕繝鍥ㄧ厱婵﹩鍓涘瓭闂佺儵濮嶉崶銊︽珫闁诲繒鍋犳慨銈夋儍閹达附鍊垫繛鎴烆仾椤忓牆鐭楅柛鈩冾焽閳绘棃鎮楅敐搴′簼闁绘挻鐟︽穱濠囶敍閵堝洨锛熸繝鈷€鍕垫疁鐎规洘鑹捐灃闁告洍鏂侀崑?
                 state.savedTemplates[name] = [...state.itineraryIds];
                 localStorage.setItem(
                     "safeBiteSavedTemplates",
@@ -191,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const customId = "custom_" + Date.now();
             state.customStops[customId] = {
                 id: customId,
-                name: "📍 Map Location",
+                name: "Map Location",
                 cuisine: "Custom Point",
                 priceLevel: "-",
                 waitTime: "0 mins",
@@ -301,7 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <article class="itinerary-card" draggable="true" data-itinerary-id="${s.id}">
             <span class="stop-number" style="${s.isCustom ? "background:#8c7b61" : ""}">${idx + 1}</span>
             <div style="flex:1">
-              <h3 style="font-size:0.95rem;margin:0;margin-bottom:2px;">${s.isCustom ? "📌" : "🍽️"} ${escapeHtml(s.name)}</h3>
+              <h3 style="font-size:0.95rem;margin:0;margin-bottom:2px;">${escapeHtml(s.name)}</h3>
               <div class="itinerary-meta" style="font-size:0.75rem"><span>${s.waitTime || "0 mins"} wait</span></div>
             </div>
             <button class="wishlist-action-btn" data-add-wish="${s.id}">
@@ -386,7 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ✅ 修复：红线遗留 BUG，在每次画图前彻底强制清理 API 渲染器
+    // 闂?濠电儑绲藉ù鍌炲窗閺嶎厔鍥蓟閵夛附娅栧┑顔矫畷顒勵敆閵忋垻纾奸柟顖嗗嫬浠存繛瀵稿У閸旀瑩骞?BUG闂備焦瀵х粙鎴︽嚐椤栨熬鑰挎い蹇撳珔閹烘洜鐤€闁哄啯鍨垫禒褰掓⒑濮瑰洤鐏辨い鏇嗗厾鐟邦潨閳ь剙鐣峰鍐惧悑闁告侗鍓氶崬澶愭煙閻撳海鎽犳繛鍙夌墪椤斿繘鏌嗗鍛槴闂佺厧鎽滈弫鎼侇敂閹间焦鐓?API 婵犵數鍋為幐绋款嚕閸洘鍋傞悗锝庡枛闂?
     function clearRouteMarkers() {
         state.routeMarkers.forEach((m) => m.setMap(null));
         state.routeMarkers = [];
@@ -396,7 +397,7 @@ document.addEventListener("DOMContentLoaded", () => {
             state.highlightMarker.setMap(null);
             state.highlightMarker = null;
         }
-        // 最核心的清理代码
+        // 闂備礁鎼悧鍐磻閹剧粯鐓涚€广儱娴傞悞鍓х磼濞差亞鐣洪柟顖氬暣瀹曠喖顢楅崒銈勭穿闂備浇宕甸崑娑樜涢弮鍫濊埞妞ゆ帒瀚崕?
         if (state.directionsRenderer) state.directionsRenderer.setDirections({ routes: [] });
         if (state.routePolyline) state.routePolyline.setPath([]);
     }
@@ -432,27 +433,167 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
+    function normalizePosition(position) {
+        return {
+            lat: getPositionValue(position, "lat"),
+            lng: getPositionValue(position, "lng"),
+        };
+    }
+
+    function toGoogleLatLng(position) {
+        const normalized = normalizePosition(position);
+        return new window.google.maps.LatLng(normalized.lat, normalized.lng);
+    }
+
+    function createFallbackSegmentPath(from, to) {
+        const start = normalizePosition(from);
+        const end = normalizePosition(to);
+        const corner = {
+            lat: start.lat,
+            lng: end.lng,
+        };
+
+        return [start, corner, end];
+    }
+
+    function createFallbackPath(positions) {
+        const path = [];
+        for (let index = 1; index < positions.length; index += 1) {
+            const segmentPath = createFallbackSegmentPath(positions[index - 1], positions[index]);
+            if (path.length) {
+                path.push(...segmentPath.slice(1));
+            } else {
+                path.push(...segmentPath);
+            }
+        }
+        return path;
+    }
+
     function drawFallbackRoute(positions) {
         if (!state.routePolyline || positions.length < 2) {
             return;
         }
 
-        state.routePolyline.setPath(positions);
+        state.routePolyline.setPath(createFallbackPath(positions));
         const summary = calculateFallbackSummary(positions);
         updateDashboard(summary.distanceKm, summary.walkingMinutes);
+    }
+
+    function requestDirectionsSegment(origin, destination, travelMode) {
+        return new Promise((resolve) => {
+            state.directionsService.route(
+                {
+                    origin: toGoogleLatLng(origin),
+                    destination: toGoogleLatLng(destination),
+                    travelMode,
+                },
+                (response, status) => {
+                    if (status !== "OK" || !response?.routes?.[0]?.legs?.[0]) {
+                        resolve(null);
+                        return;
+                    }
+
+                    const route = response.routes[0];
+                    const leg = route.legs[0];
+                    const path = route.overview_path?.length ? route.overview_path : [origin, destination];
+                    const middleStep = leg.steps?.[Math.floor((leg.steps?.length || 1) / 2)];
+
+                    resolve({
+                        path,
+                        distanceMeters: leg.distance?.value || 0,
+                        durationSeconds: leg.duration?.value || 0,
+                        durationText: leg.duration?.text || "",
+                        badgePosition: middleStep?.start_location || path[Math.floor(path.length / 2)],
+                    });
+                },
+            );
+        });
+    }
+
+    async function requestWalkingSegment(origin, destination) {
+        const walkingSegment = await requestDirectionsSegment(
+            origin,
+            destination,
+            window.google.maps.TravelMode.WALKING,
+        );
+
+        if (walkingSegment) {
+            return walkingSegment;
+        }
+
+        return requestDirectionsSegment(
+            origin,
+            destination,
+            window.google.maps.TravelMode.DRIVING,
+        );
+    }
+
+    async function drawWalkingRouteBySegments(positions, drawId) {
+        const routePath = [];
+        let totalMeters = 0;
+        let totalSeconds = 0;
+
+        for (let index = 1; index < positions.length; index += 1) {
+            const origin = positions[index - 1];
+            const destination = positions[index];
+            const segment = await requestWalkingSegment(origin, destination);
+
+            if (drawId !== state.routeDrawId) {
+                return;
+            }
+
+            if (segment) {
+                routePath.push(...(routePath.length ? segment.path.slice(1) : segment.path));
+                totalMeters += segment.distanceMeters;
+                totalSeconds += segment.durationSeconds;
+                state.segmentMarkers.push(
+                    new window.google.maps.Marker({
+                        position: segment.badgePosition,
+                        map: state.map,
+                        clickable: false,
+                        zIndex: 120,
+                        icon: createGoogleBadgeIcon(segment.durationText),
+                    }),
+                );
+            } else {
+                const fallbackSegmentPath = createFallbackSegmentPath(origin, destination);
+                routePath.push(...(routePath.length ? fallbackSegmentPath.slice(1) : fallbackSegmentPath));
+                const fallbackSummary = calculateFallbackSummary([origin, destination]);
+                const fallbackMinutes = fallbackSummary.walkingMinutes;
+                totalMeters += fallbackSummary.distanceKm * 1000;
+                totalSeconds += fallbackMinutes * 60;
+                state.segmentMarkers.push(
+                    new window.google.maps.Marker({
+                        position: fallbackSegmentPath[1],
+                        map: state.map,
+                        clickable: false,
+                        zIndex: 120,
+                        icon: createGoogleBadgeIcon(`${fallbackMinutes} mins`),
+                    }),
+                );
+            }
+        }
+
+        if (drawId !== state.routeDrawId) {
+            return;
+        }
+
+        if (state.directionsRenderer) state.directionsRenderer.setDirections({ routes: [] });
+        state.routePolyline.setPath(routePath);
+        updateDashboard(totalMeters / 1000, Math.round(totalSeconds / 60));
     }
 
     function drawItineraryOnMap() {
         if (!state.mapReady) return;
 
-        clearRouteMarkers(); // 清理旧数据
+        const drawId = ++state.routeDrawId;
+        clearRouteMarkers();
 
         const stops = state.itineraryIds.map(getAnyStopById).filter(Boolean);
         const positions = stops
             .map((s) => (s.isCustom ? s.coordinates : toLatLng(s.coordinates)))
             .filter(Boolean);
 
-        // ✅ 如果全部被 Clear 删除了，重置中心点
         if (positions.length === 0) {
             state.map.setCenter({ lat: -27.476, lng: 153.024 });
             state.map.setZoom(14.2);
@@ -482,43 +623,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         drawFallbackRoute(positions);
-
-        const waypoints = positions
-            .slice(1, -1)
-            .map((pos) => ({ location: pos, stopover: true }));
-        state.directionsService.route(
-            {
-                origin: positions[0],
-                destination: positions[positions.length - 1],
-                waypoints: waypoints,
-                travelMode: window.google.maps.TravelMode.WALKING,
-            },
-            (response, status) => {
-                if (status === "OK") {
-                    state.directionsRenderer.setDirections(response);
-                    if (state.routePolyline) state.routePolyline.setPath([]);
-                    let totalMeters = 0;
-                    let totalSeconds = 0;
-                    response.routes[0].legs.forEach((leg) => {
-                        totalMeters += leg.distance.value;
-                        totalSeconds += leg.duration.value;
-                        const middleStep = leg.steps[Math.floor(leg.steps.length / 2)];
-                        state.segmentMarkers.push(
-                            new window.google.maps.Marker({
-                                position: middleStep.start_location,
-                                map: state.map,
-                                clickable: false,
-                                zIndex: 120,
-                                icon: createGoogleBadgeIcon(leg.duration.text),
-                            }),
-                        );
-                    });
-                    updateDashboard(totalMeters / 1000, Math.round(totalSeconds / 60));
-                } else {
-                    drawFallbackRoute(positions);
-                }
-            },
-        );
         fitGoogleMapToPositions(state.map, positions, 96);
     }
 
@@ -566,7 +670,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let extraMsg = savedName
             ? `It has been saved as <strong>${escapeHtml(savedName)}</strong> below.`
-            : `<span style="font-size: 0.9rem; color: #8c7b61;">💡 <em>Tip: You didn't enter a name. You can still name it and save it for future use!</em></span>`;
+            : `<span style="font-size: 0.9rem; color: #8c7b61;">婵☆偓绲介崯顖溾偓?<em>Tip: You didn't enter a name. You can still name it and save it for future use!</em></span>`;
 
         refs.confirmationSummary.innerHTML = `
             Awesome! You have successfully planned a food journey with <strong>${stopsCount} stops</strong>. 
@@ -593,7 +697,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function getSavedCustomStops() {
         try {
-            return JSON.parse(localStorage.getItem("safeBiteCustomStops")) || {};
+            const stops = JSON.parse(localStorage.getItem("safeBiteCustomStops")) || {};
+            Object.values(stops).forEach((stop) => {
+                if (stop?.isCustom) {
+                    stop.name = "Map Location";
+                }
+            });
+            localStorage.setItem("safeBiteCustomStops", JSON.stringify(stops));
+            return stops;
         } catch (e) {
             return {};
         }

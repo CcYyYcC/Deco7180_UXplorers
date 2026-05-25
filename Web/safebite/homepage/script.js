@@ -1,6 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   const { restaurants, routes } = window.SafeBiteData;
-  const { escapeHtml, formatEatSafeSmileyHtml, getEatSafeRating, getRouteStops, getSafetyLabel } = window.SafeBiteUtils;
+  const {
+    escapeHtml,
+    formatEatSafeSmileyHtml,
+    getEatSafeRating,
+    getRouteStops,
+    getSafetyLabel,
+  } = window.SafeBiteUtils;
 
   const state = {
     query: "",
@@ -15,6 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
     featuredRestaurants: document.querySelector("#featuredRestaurants"),
     featuredRoutes: document.querySelector("#featuredRoutes"),
   };
+
+  const routePreviewImages = [
+    "../assets/images/pixabay-interior-2305694_640.jpg",
+    "../assets/images/pexels-quang-nguyen-vinh-222549-6877610.jpg",
+    "../assets/images/pixabay-wine-8346641_640.jpg",
+  ];
 
   initialize();
 
@@ -55,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
       closeDrawer();
       return;
     }
+
     refs.siteDrawer.hidden = false;
     refs.drawerBackdrop.hidden = false;
     refs.menuToggle.setAttribute("aria-expanded", "true");
@@ -89,9 +102,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return featured.filter((route) => {
-      const stopNames = getRouteStops(route).map((stop) => stop.name).join(" ").toLowerCase();
+      const stopNames = getRouteStops(route)
+        .map((stop) => stop.name)
+        .join(" ")
+        .toLowerCase();
       return route.name.toLowerCase().includes(state.query) || stopNames.includes(state.query);
     });
+  }
+
+  function getRouteFoodSafetyScore(route) {
+    if (typeof route.foodSafetyScore === "number") {
+      return route.foodSafetyScore;
+    }
+
+    return Math.round(((route.eatSafeRating || 0) / 5) * 100);
   }
 
   function render() {
@@ -118,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="content-card__body">
               <span class="content-card__meta">${escapeHtml(restaurant.cuisine)} · ${restaurant.priceLevel}</span>
               <h3>${escapeHtml(restaurant.name)}</h3>
-              <p>${escapeHtml(restaurant.address)} · ${restaurant.distance.toFixed(1)} mi away · ${restaurant.waitTime} min wait</p>
+              <p>${escapeHtml(restaurant.address)} · ${restaurant.distance.toFixed(1)} mi away · ${restaurant.waitTime}</p>
               <div class="content-card__footer">
                 <span class="safety-pill">
                   <strong>${restaurant.rating.toFixed(1)}</strong>
@@ -154,20 +178,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     refs.featuredRoutes.innerHTML = items
-      .map((route) => {
+      .map((route, index) => {
         const stopNames = getRouteStops(route)
           .map((stop) => stop.name)
-          .join(" → ");
+          .join(" -> ");
+        const routeImage = routePreviewImages[index % routePreviewImages.length];
 
         return `
           <article class="content-card">
-            <img src="../assets/images/pexels-quang-nguyen-vinh-222549-6877610.jpg" alt="${escapeHtml(route.name)} route preview" />
+            <img src="${routeImage}" alt="${escapeHtml(route.name)} route preview" />
             <div class="content-card__body">
               <span class="content-card__meta">${route.estimatedWalkingTime} · ${route.priceLevel}</span>
               <h3>${escapeHtml(route.name)}</h3>
               <p>${escapeHtml(stopNames)}</p>
               <div class="content-card__footer">
-                <span class="route-pill">Safety ${route.foodSafetyScore}/100</span>
+                <span class="route-pill">Safety ${getRouteFoodSafetyScore(route)}/100</span>
                 <a class="content-link" href="../recommended-routes/index.html">View route</a>
               </div>
             </div>

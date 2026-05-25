@@ -69,6 +69,22 @@ document.addEventListener("DOMContentLoaded", () => {
     closeRestaurantModal: document.querySelector("#closeRestaurantModal"),
   };
 
+  const FOOD_SAFETY_DATA_SOURCE_URL =
+    "https://data.brisbane.qld.gov.au/explore/dataset/food-safety-permits/information/?disjunctive.permit_name&disjunctive.business_address_suburb_list&sort=index&dataChart=eyJxdWVyaWVzIjpbeyJjb25maWciOnsiZGF0YXNldCI6ImZvb2Qtc2FmZXR5LXBlcm1pdHMiLCJvcHRpb25zIjp7ImRpc2p1bmN0aXZlLnBlcm1pdF9uYW1lIjp0cnVlLCJkaXNqdW5jdGl2ZS5idXNpbmVzc19hZGRyZXNzX3N1YnVyYl9saXN0Ijp0cnVlLCJzb3J0IjoiaW5kZXgifX0sImNoYXJ0cyI6W3siYWxpZ25Nb250aCI6dHJ1ZSwidHlwZSI6ImNvbHVtbiIsImZ1bmMiOiJDT1VOVCIsInNjaWVudGlmaWNEaXNwbGF5Ijp0cnVlLCJjb2xvciI6IiMwMDY3YjEifV0sInhBeGlzIjoiZWF0X3NhZmVfcmF0aW5nIiwibWF4cG9pbnRzIjo1MCwic29ydCI6IiJ9XSwidGltZXNjYWxlIjoiIiwiZGlzcGxheUxlZ2VuZCI6dHJ1ZSwiYWxpZ25Nb250aCI6dHJ1ZX0%3D";
+
+  const inspectionDatesByRestaurant = {
+    "longwang-restaurant": "12 May 2026",
+    "opa-bar-and-mezze": "8 May 2026",
+    "babylon-brisbane": "30 April 2026",
+    "dark-shepherd": "22 April 2026",
+    "toscano-bar-and-kitchen": "18 April 2026",
+    "massimo-restaurant-and-bar": "15 April 2026",
+    "mr-wabi": "9 April 2026",
+    "donna-chang": "2 April 2026",
+    "madame-wu": "26 March 2026",
+    "naldham-house": "19 March 2026",
+  };
+
   const inspectionSummaries = {
     5: {
       status: "Compliant",
@@ -783,14 +799,14 @@ document.addEventListener("DOMContentLoaded", () => {
             <dl class="safety-report-panel__details">
               <div><dt>Inspection result</dt><dd>${escapeHtml(inspection.result)}</dd></div>
               <div><dt>Compliance status</dt><dd>${escapeHtml(inspection.status)}</dd></div>
-              <div><dt>Hygiene score</dt><dd>${restaurant.safetyPercent}% · Grade ${escapeHtml(restaurant.safetyGrade)}</dd></div>
+              <div><dt>Inspection date</dt><dd>${escapeHtml(inspectionDatesByRestaurant[restaurant.id] || "12 May 2026")}</dd></div>
               <div><dt>Complaint record</dt><dd>${escapeHtml(inspection.complaintRecord)}</dd></div>
               <div><dt>Follow-up action</dt><dd>${escapeHtml(inspection.followUp)}</dd></div>
               <div><dt>Inspection authority</dt><dd>Brisbane City Council food business monitoring</dd></div>
             </dl>
-            <p class="safety-report-panel__note">
-              This prototype report summarizes official-style food safety signals for trip planning and restaurant comparison.
-            </p>
+            <a class="safety-report-panel__source" href="${FOOD_SAFETY_DATA_SOURCE_URL}" target="_blank" rel="noopener noreferrer">
+              View data source
+            </a>
           </div>
         </aside>
       </div>
